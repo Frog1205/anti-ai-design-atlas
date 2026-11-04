@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="五十种让网页显得“像 AI 做的”的设计习惯：怎么认出来、问题在哪、怎么改，附红笔批注的原样示意和改后示意。">
+<title>AI 味设计图鉴</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@1,400;1,600&family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700;900&family=LXGW+WenKai+TC&display=swap">
+<style>
+/* 版式：一张深海色的“搁浅图”。首页是可点的索引海图，下面是标本画廊，点开从右侧滑出详情。
+   整站只有一种底色；黄铜色表示“可以点”，余烬红只用于批改。 */
+:root{
+  --deep:#0b1526;        /* 底色 */
+  --raised:#111e35;      /* 抽屉、清单 */
+  --line:#24344f;        /* 分隔与边框 */
+  --brass:#caa96b;       /* 可交互：链接、按钮、选中 */
+  --brass-dim:rgba(202,169,107,.28);
+  --paper:#e3ded2;       /* 正文 */
+  --muted:#9d988b;       /* 次要文字 */
+  --ember:#ef6b3d;       /* 批改 */
+  --ember-soft:rgba(239,107,61,.16);
+  --display:"Noto Serif SC","Songti SC",serif;
+  --num:"Spectral","Iowan Old Style",Georgia,serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --hand:"LXGW WenKai TC","Kaiti SC","STKaiti","KaiTi",serif;
+  --out:cubic-bezier(.16,1,.3,1);
+  --io:cubic-bezier(.7,0,.3,1);
+  --edge:max(16px,env(safe-area-inset-left,0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html.lock{overflow:hidden}
+body{background:var(--deep);color:var(--paper);font-family:var(--sans);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--deep)}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:1.5px solid var(--brass);outline-offset:3px}
+.wrap{max-width:1320px;margin:0 auto}
+.num{font-family:var(--num);font-style:italic;font-variant-numeric:lining-nums}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* ———— 顶栏 ———— */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--deep);
+  margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
+.bar .wrap{display:flex;align-items:center;gap:24px;height:60px;padding:0 var(--edge)}
+.brand{font-family:var(--display);font-weight:900;font-size:17px;letter-spacing:.04em;text-decoration:none;white-space:nowrap}
+.search{flex:1;max-width:440px;position:relative;margin-left:auto}
+.search input{width:100%;font:inherit;font-size:14px;color:var(--paper);background:transparent;border:0;border-bottom:1px solid var(--line);padding:6px 70px 6px 24px;transition:border-color .4s var(--out)}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{outline:none;border-color:var(--brass)}
+.search svg{position:absolute;left:0;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.6}
+.qinfo{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:12px;color:var(--brass)}
+.bar nav{display:flex;gap:22px;font-size:14px;white-space:nowrap}
+.bar nav a{text-decoration:none;color:var(--muted);position:relative;transition:color .35s}
+.bar nav a::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:1px;background:var(--brass);transform:scaleX(0);transform-origin:right;transition:transform .55s var(--out)}
+.bar nav a:hover{color:var(--paper)}
+.bar nav a:hover::after{transform:scaleX(1);transform-origin:left}
+.cnt{color:var(--ember);margin-left:2px}
+.progress{height:1px;background:var(--line);position:relative}
+.progress i{position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--brass) 30%,var(--brass));transform-origin:left;transform:scaleX(var(--p,0))}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ———— 首屏：标题 + 索引海图 ———— */
+.hero{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;align-items:center;padding-block:64px 40px}
+.hero h1{font-family:var(--display);font-weight:900;font-size:clamp(46px,6.4vw,92px);line-height:1.08;margin:0;letter-spacing:.01em;color:#f2ede1}
+.hero h1 .strike{position:relative;white-space:nowrap}
+.hero h1 .strike::after{content:"";position:absolute;left:-4%;right:-4%;top:54%;height:.065em;background:var(--ember);transform:rotate(-4deg) scaleX(0);transform-origin:left;animation:strike .9s var(--io) .5s forwards}
+.hero h1 .caret{font-family:var(--hand);color:var(--ember);font-weight:400;font-size:.36em;vertical-align:1em;margin-left:.15em;white-space:nowrap;opacity:0;animation:inkin .8s var(--out) 1.2s forwards}
+@keyframes strike{to{transform:rotate(-4deg) scaleX(1)}}
+@keyframes inkin{from{opacity:0;filter:blur(4px);transform:translateY(4px)}to{opacity:1;filter:none;transform:none}}
+.lede{margin:28px 0 0;max-width:30em;color:var(--paper);font-size:16.5px}
+.lede b{color:var(--brass);font-weight:500}
+.meta{margin-top:18px;font-size:13px;color:var(--muted)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .cap{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:8px;gap:12px}
+.contour{fill:none;stroke:var(--brass);stroke-width:.7;opacity:.35;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.6s var(--out) forwards}
+.contour.c0{opacity:.6}
+@keyframes draw{to{stroke-dashoffset:0}}
+.region text{font-family:var(--display);font-weight:600;font-size:12px;fill:var(--paper);paint-order:stroke;stroke:var(--deep);stroke-width:4px;letter-spacing:.06em}
+.region{transition:opacity .5s var(--out)}
+.region.dim{opacity:.22}
+.pin{cursor:pointer}
+.pin circle{fill:var(--deep);stroke:var(--brass);stroke-width:1;transition:fill .3s,stroke .3s,r .3s var(--out)}
+.pin text{font-family:var(--num);font-style:italic;font-size:7.5px;fill:var(--brass);text-anchor:middle;dominant-baseline:central;pointer-events:none;transition:fill .3s}
+.pin:hover circle,.pin:focus-visible circle{fill:var(--brass);r:9.5}
+.pin:hover text,.pin:focus-visible text{fill:var(--deep)}
+.pin.on circle{stroke:var(--ember);fill:var(--ember-soft)}
+.pin.on text{fill:var(--ember)}
+.pin.hide{opacity:.15;pointer-events:none}
+.pin{transition:opacity .4s}
+.pin:focus{outline:none}
+.tip{position:absolute;pointer-events:none;background:var(--raised);border:1px solid var(--line);padding:4px 10px;font-size:13px;white-space:nowrap;transform:translate(-50%,calc(-100% - 14px));opacity:0;transition:opacity .2s;z-index:2}
+.tip .num{color:var(--brass);margin-right:6px}
+
+/* ———— 画廊 ———— */
+.atlas{padding-top:48px;scroll-margin-top:72px}
+.atlas-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding-top:22px}
+.atlas-head h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0}
+.atlas-head h2 .num{color:var(--brass);font-size:.9em;margin-left:.25em}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer;user-select:none}
+.toggle input{appearance:none;width:30px;height:16px;border:1px solid var(--line);border-radius:8px;margin:0;position:relative;cursor:pointer;transition:border-color .3s}
+.toggle input::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--muted);transition:transform .45s var(--out),background .3s}
+.toggle input:checked{border-color:var(--ember)}
+.toggle input:checked::after{transform:translateX(14px);background:var(--ember)}
+.tabs{position:relative;display:flex;gap:28px;margin-top:18px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{background:none;border:0;padding:10px 0 12px;font-size:15px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:color .35s}
+.tabs button:hover{color:var(--paper)}
+.tabs button[aria-selected="true"]{color:var(--paper)}
+.tabs button .num{font-size:.85em;margin-left:.35em;color:var(--brass)}
+.tabs .ind{position:absolute;bottom:-1px;left:0;height:2px;background:var(--brass);width:var(--w,0);transform:translateX(var(--x,0));transition:transform .6s var(--out),width .6s var(--out)}
+
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:48px 24px;padding-block:32px 24px}
+.card{position:relative;min-width:0}
+.card.in{animation:cardin .7s var(--out) both;animation-delay:calc(var(--ci,0) * 35ms)}
+@keyframes cardin{from{opacity:0;transform:translateY(14px)}}
+.card[hidden]{display:none}
+.plate{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;container-type:inline-size;position:relative}
+.plate .st,.plate .proof{pointer-events:none}
+.plate .proof{aspect-ratio:16/10;overflow:hidden;font-size:4.6cqw;padding:5% 6%}
+.plate::after{content:"";position:absolute;inset:0;outline:1px solid var(--brass);outline-offset:6px;opacity:0;transition:opacity .4s,outline-offset .5s var(--out)}
+.card:hover .plate::after{opacity:1;outline-offset:3px}
+.cmeta{display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin-top:14px;align-items:start}
+.cmeta h3{margin:0;font-family:var(--display);font-weight:600;font-size:17px;line-height:1.4}
+.cmeta h3 a{text-decoration:none;background:linear-gradient(var(--brass),var(--brass)) 0 100%/0 1px no-repeat;transition:background-size .6s var(--out)}
+.card:hover .cmeta h3 a{background-size:100% 1px}
+.cmeta h3 .num{color:var(--brass);font-weight:400;margin-right:.45em;font-size:.95em}
+.cmeta .sub{grid-column:1;font-size:12.5px;color:var(--muted)}
+.cmeta .sub .mine-tag{color:var(--ember);margin-left:.6em;font-family:var(--hand);font-size:14px}
+.go{grid-row:1/3;grid-column:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--brass-dim);background:none;display:grid;place-items:center;cursor:pointer;transition:background .4s,border-color .4s}
+.go svg{width:13px;height:13px;stroke:var(--brass);fill:none;stroke-width:1.6;transition:transform .5s var(--out),stroke .3s}
+.card:hover .go{background:var(--brass);border-color:var(--brass)}
+.card:hover .go svg{stroke:var(--deep);transform:rotate(45deg)}
+mark{background:var(--ember-soft);color:inherit;box-shadow:0 1px 0 var(--ember)}
+.empty{padding:40px 0 64px;color:var(--muted)}
+.empty button{background:none;border:0;color:var(--brass);text-decoration:underline;cursor:pointer;padding:0}
+
+/* ———— 标本（别人的网站截图），颜色写死 ———— */
+.st{position:relative;aspect-ratio:16/10;max-width:100%;overflow:hidden;font-family:var(--sans);font-size:2.8cqw;line-height:1.4;background:#fff;color:#1d1d20;text-align:left}
+.st *{box-sizing:border-box}
+.ln{display:block;height:.42em;border-radius:.2em;background:#d6d6dc;margin:.4em 0}
+.ln.dk{background:#9a9aa2}
+.mk{position:absolute;border-radius:50%;background:#c4231a;color:#fff;font:700 .78em var(--sans);width:1.9em;height:1.9em;line-height:1.9em;text-align:center;box-shadow:0 0 0 .18em #fff;z-index:3}
+.rg{position:absolute;border:.17em solid #c4231a;border-radius:50%;transform:rotate(-3deg);z-index:2;pointer-events:none}
+.vl{position:absolute;top:0;bottom:0;border-left:.12em dashed #c4231a;z-index:2}
+.pill{display:inline-block;border-radius:99em;padding:.35em 1.1em}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column}
+.lz{--g:#1e5b45;font-family:var(--sans)}
+.lz .top{height:.45em;background:var(--g)}
+.lz .hd{display:flex;justify-content:space-between;align-items:baseline;padding:.9em 1.4em .4em;font-size:.82em;color:#5c5c62}
+.lz .hd b{color:#1b1b1b;font-size:1.15em;font-weight:900;letter-spacing:.04em}
+.lz .btn{display:inline-block;background:var(--g);color:#fff;padding:.45em 1em;border-radius:.2em;font-weight:500;font-size:.85em}
+.lz .row{display:flex;justify-content:space-between;padding:.42em 0;border-bottom:1px solid #e6e6e8;font-variant-numeric:tabular-nums}
+.lz .num{font-family:var(--sans);font-style:normal;font-variant-numeric:tabular-nums}
+.proof{font-family:var(--sans);background:#fff;color:#1d1d20;padding:6% 7%;font-size:4.2cqw;line-height:1.6;text-align:left}
+.proof del{text-decoration:none;position:relative;color:#1d1d20}
+.proof del::after{content:"";position:absolute;left:-.1em;right:-.1em;top:50%;height:.12em;background:#c4231a;transform:rotate(-2deg)}
+.proof ins{text-decoration:none;font-family:var(--hand);color:#c4231a;display:block;font-size:.95em;margin:.15em 0 .6em}
+.proof ins::before{content:"⌃ ";font-family:var(--sans)}
+.proof .lbl{font-size:.62em;letter-spacing:.14em;color:#8a8a91}
+.proof .sm{font-size:.7em;color:#6b6b72}
+.hov-bad{transition:transform .25s,box-shadow .25s}
+.hov-bad:hover{transform:translateY(-.5em) scale(1.06);box-shadow:0 1.2em 2.4em rgba(80,40,160,.35)}
+.hov-good:hover .t{color:#1e5b45;text-decoration:underline}
+@keyframes fadeup{0%,30%{opacity:0;transform:translateY(1em)}60%,100%{opacity:1;transform:none}}
+.anim{animation:fadeup 3.2s ease-out infinite}
+
+/* ———— 详情抽屉 ———— */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(1,8,18,.72);opacity:0;pointer-events:none;transition:opacity .6s var(--out)}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:41;width:min(1120px,100%);background:var(--raised);box-shadow:-30px 0 80px rgba(0,0,0,.45);
+  transform:translateX(102%);transition:transform .8s var(--io);display:flex;flex-direction:column;visibility:hidden}
+.open .scrim{opacity:1;pointer-events:auto}
+.open .drawer{transform:none;visibility:visible}
+.dbar{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px 32px;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+.dbar .where{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbar .where .num{color:var(--brass);font-size:1.1em;margin-right:.4em}
+.ibtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:none;display:grid;place-items:center;cursor:pointer;transition:border-color .3s,background .3s;flex:none}
+.ibtn:hover{border-color:var(--brass)}
+.ibtn svg{width:14px;height:14px;stroke:var(--paper);fill:none;stroke-width:1.6}
+.ibtn:disabled{opacity:.3;cursor:default}
+.dbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:36px 32px 64px}
+.dgrid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:28px 48px}
+.dbody.swap .dgrid{animation:swap .6s var(--out)}
+@keyframes swap{from{opacity:0;transform:translateX(var(--dir,24px))}}
+.dtext h2{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.3;margin:0 0 18px;color:#f2ede1;text-wrap:balance}
+.dtext h2 .num{display:block;font-weight:400;font-size:20px;color:var(--brass);margin-bottom:4px}
+.dtext dl{margin:0}
+.dtext dt{font-size:13px;color:var(--brass);margin-top:16px;letter-spacing:.08em}
+.dtext dd{margin:2px 0 0;color:var(--paper)}
+.dtext dd.why{color:#c9c4b8}
+.mine{display:inline-flex;align-items:center;gap:10px;margin-top:24px;font-size:14px;cursor:pointer;user-select:none;color:var(--muted)}
+.mine input{appearance:none;width:20px;height:20px;border:1px solid var(--muted);margin:0;display:grid;place-content:center;cursor:pointer;background:transparent;transition:border-color .3s}
+.mine input::after{content:"✓";font-family:var(--hand);color:var(--ember);font-size:22px;line-height:1;transform:translate(1px,-3px) scale(0);transition:transform .35s var(--out)}
+.mine input:checked{border-color:var(--ember)}
+.mine input:checked::after{transform:translate(1px,-3px) scale(1)}
+.mine input:checked + span{color:var(--ember)}
+.figs{display:grid;grid-template-columns:minmax(0,1fr);gap:28px;align-content:start}
+.figs.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.figs.one figure{max-width:620px}
+figure{margin:0;container-type:inline-size;min-width:0}
+figcaption{font-size:13px;color:var(--muted);margin-bottom:8px}
+figcaption b{color:var(--paper);font-weight:500}
+.notes{list-style:none;margin:14px 0 0;padding:0;font-family:var(--hand);color:var(--ember);font-size:16.5px;line-height:1.6}
+.notes li{counter-increment:n;display:grid;grid-template-columns:1.7em 1fr;margin-top:4px}
+.notes{counter-reset:n}
+.notes li::before{content:counter(n);font:700 11px/1.7em var(--sans);width:1.7em;height:1.7em;text-align:center;border-radius:50%;background:var(--ember);color:var(--deep);margin-top:.2em}
+.gnote{margin:12px 0 0;font-size:14px;color:#c9c4b8;line-height:1.7}
+
+/* ———— 自查清单 ———— */
+.check{padding-block:72px 40px;scroll-margin-top:72px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:48px;border-top:1px solid var(--line);margin-top:48px}
+.check h2{font-family:var(--display);font-weight:900;font-size:34px;margin:0 0 12px;color:#f2ede1}
+.check .lead{color:#c9c4b8;margin:0}
+.report{font-family:var(--sans);font-size:14.5px;line-height:1.85;background:var(--raised);border:1px solid var(--line);padding:22px 26px;white-space:pre-wrap;margin:0;min-height:6em;color:var(--paper)}
+.report.none{color:var(--muted)}
+.actions{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;align-items:center}
+.btn-b{font-size:14px;padding:10px 20px;background:transparent;color:var(--brass);border:1px solid var(--brass);outline:1px solid transparent;outline-offset:0;cursor:pointer;transition:background .35s,color .35s,outline-color .4s,outline-offset .5s var(--out)}
+.btn-b:hover:not(:disabled){background:var(--brass);color:var(--deep);outline-color:var(--brass-dim);outline-offset:4px}
+.btn-b.ghost{border-color:var(--line);color:var(--muted)}
+.btn-b.ghost:hover:not(:disabled){background:transparent;color:var(--paper);border-color:var(--muted);outline-color:transparent}
+.btn-b:disabled{opacity:.35;cursor:default}
+.status{font-size:13.5px;color:var(--muted)}
+.self{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin-top:24px;padding-top:28px;border-top:1px solid var(--line)}
+.self h3{grid-column:1/-1;margin:0;font-family:var(--display);font-weight:600;font-size:18px}
+.self p{margin:0;font-size:14.5px;color:#c9c4b8}
+.self p b{color:var(--paper);font-weight:500;display:block;margin-bottom:4px}
+footer{padding-block:28px 48px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
+
+@media (max-width:1100px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){
+  .hero{grid-template-columns:minmax(0,1fr);padding-block:40px 24px;gap:32px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 16px}
+  .dgrid{grid-template-columns:minmax(0,1fr)}
+  .check{grid-template-columns:minmax(0,1fr)}
+  .self{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:600px){
+  .bar .wrap{gap:14px}
+  .brand{display:none}
+  .bar nav{gap:14px}
+  .bar nav .hide-s{display:none}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .figs.two{grid-template-columns:minmax(0,1fr)}
+  .dbody{padding:24px 20px 56px}
+  .dbar{padding-left:20px}
+  .dtext h2{font-size:25px}
+  .chart .cap span:last-child{display:none}
+}
+</style>
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+
+
+<div class="bar"><div class="wrap">
+  <a class="brand" href="#top">AI 味设计图鉴</a>
+  <div class="search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+    <label for="q" class="sr">搜索条目</label>
+    <input id="q" type="search" placeholder="搜索：渐变、按钮、口号……" autocomplete="off">
+    <span class="qinfo" id="qInfo" role="status"></span>
+  </div>
+  <nav><a href="#atlas" class="hide-s">图鉴</a><a href="#check">自查清单<span class="cnt" id="barCnt"></span></a></nav>
+</div><div class="progress"><i id="prog"></i></div></div>
+
+<div class="wrap" id="top">
+<header class="hero">
+  <div>
+    <h1>AI 味<br><span class="strike">设计</span><span class="caret">没人做决定的设计</span><br>图鉴</h1>
+    <p class="lede">网页看起来“像 AI 做的”，通常不是因为哪一处做错了，而是很多地方用的都是默认值：没有人决定要用，它就出现了。这里收了五十种这样的地方。每条都画了原样，用红笔批出问题；能改的，再用同一个虚构产品<b>落账</b>（一款给夜市摊和小卖部用的记账 App）画出改后的样子。</p>
+    <p class="meta">五十条，分六类 · 2026 年 11 月修订</p>
+  </div>
+  <div class="chart" id="chart">
+    <svg id="map" viewBox="0 0 640 430" role="img" aria-label="五十个条目按六类分布的索引图，每个圆点可以点开"></svg>
+    <div class="tip" id="tip"></div>
+    <div class="cap"><span>每个点是一条，按类别聚在一起。点开看详情。</span><span>红圈：你勾选过的</span></div>
+  </div>
+</header>
+
+<section class="atlas" id="atlas">
+  <div class="atlas-head">
+    <h2>全部条目<span class="num" id="shown">50</span></h2>
+    <label class="toggle"><input type="checkbox" id="onlyMine"><span>只看我勾选的</span></label>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"><span class="ind" id="ind"></span></div>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden></p>
+</section>
+
+<section class="check" id="check">
+  <div>
+    <h2>自查清单</h2>
+    <p class="lead">在详情里勾选“我的网站也有这个”，条目会按类别列在这里，附上改法。可以复制下来发给同事，或者贴进需求单。勾选只保存在这台设备的浏览器里。</p>
+  </div>
+  <div>
+    <pre class="report" id="report"></pre>
+    <div class="actions">
+      <button class="btn-b" id="copyBtn" type="button">复制清单</button>
+      <button class="btn-b ghost" id="clearBtn" type="button">全部取消勾选</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </div>
+  <div class="self">
+    <h3>这一页自己也对照检查过</h3>
+    <p><b>悬停不放大（第 46 条）</b>卡片在鼠标经过时不动，只有标题下划线和右下角的箭头会变化。</p>
+    <p><b>不靠滚动淡入（第 47 条）</b>页面打开就是完整的。动效只用在会变化的地方：切换类别、打开和翻页详情、首屏那张图画出来的一次。</p>
+    <p><b>颜色各管一件事（第 6 条）</b>整站一种底色。黄铜色表示可以点，余烬红只用于批改和你的勾选，没有第三种强调色。</p>
+  </div>
+</section>
+
+<footer>示意图都是用 HTML 画的，不是真实网站的截图；其中的公司名 Nexora、Acme、Nimbus 和产品“落账”都是虚构的。</footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" tabindex="-1">
+  <div class="dbar">
+    <span class="where" id="dWhere"></span>
+    <button class="ibtn" id="dPrev" type="button" aria-label="上一条"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="ibtn" id="dNext" type="button" aria-label="下一条"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+    <button class="ibtn" id="dClose" type="button" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+
+<script>
+'use strict';
+const CATS=[
+ {k:'color',n:'一',t:'颜色与质感',cx:120,cy:120},
+ {k:'comp',n:'二',t:'组件与装饰',cx:318,cy:92},
+ {k:'layout',n:'三',t:'布局',cx:520,cy:128},
+ {k:'type',n:'四',t:'字与文案',cx:170,cy:318},
+ {k:'image',n:'五',t:'图像',cx:368,cy:268},
+ {k:'flow',n:'六',t:'动效与流程',cx:530,cy:330}
+];
+const mk=(n,x,y)=>`<b class="mk" style="left:${x}%;top:${y}%">${n}</b>`;
+const rg=(x,y,w,h)=>`<i class="rg" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></i>`;
+const L=(w,c='')=>`<i class="ln ${c}" style="width:${w}%"></i>`;
+const st=(inner,style='')=>`<div class="st" style="${style}">${inner}</div>`;
+const lzHead=(right='11月4日 周三')=>`<div class="top"></div><div class="hd"><b>落账</b><span>${right}</span></div>`;
+
+const E=[
+/* ———————— 一 颜色与质感 ———————— */
+{c:'color',t:'蓝紫渐变泛滥',
+ see:'主色是一道从紫到蓝、或从紫到粉的斜向渐变。把 Logo 遮住，分不清是哪家公司。',
+ why:'这组颜色是模板和生成工具的默认值，用的人太多，已经不代表“科技”，只说明没人想过颜色。',
+ fix:'从产品自己的世界里找颜色：包装、门店、行业惯例、用户手边的东西。一时找不到，就先用黑白把内容排好，颜色最后再加。',
+ bad:st(`<div class="ph" style="background:linear-gradient(135deg,#6d28d9,#3b82f6 55%,#ec4899);color:#fff">
+   <div style="display:flex;justify-content:space-between;padding:1.2em 1.6em;font-size:.8em"><b>◆ Nexora</b><span style="opacity:.8">Product　Pricing　Docs</span></div>
+   <div style="text-align:center;margin-top:2.4em"><div style="font-size:2.2em;font-weight:900;line-height:1.1">Build the Future<br>of Finance</div>
+   <div style="font-size:.72em;opacity:.7;margin-top:1em">AI-powered insights for modern teams</div>
+   <span class="pill" style="background:#fff;color:#4c1d95;font-size:.8em;margin-top:1.2em;font-weight:700">Get Started →</span></div></div>`
+   +mk(1,4,22)+rg(29,26,44,32)+mk(2,74,58)),
+ notes:['把 Nexora 换成任何公司名，这一屏照样成立','七成透明度的白色小字压在亮蓝上，读不清'],
+ good:st(`<div class="ph lz">${lzHead()}<div style="padding:.6em 1.4em">
+   <div style="font-size:.8em;color:#5c5c62">今天收了</div>
+   <div style="font-size:2.6em;font-weight:900;line-height:1.1" class="num">¥2,318</div>
+   <div style="margin-top:.6em;font-size:.86em"><div class="row"><span>微信</span><span>1,206</span></div><div class="row"><span>支付宝</span><span>742</span></div><div class="row"><span>现金</span><span>370</span></div></div>
+   <div style="margin-top:.8em"><span class="btn">记一笔</span></div></div></div>`),
+ gnote:'主色取自老式账本的墨绿封皮。白底是为了让数字像写在纸上。'},
+
+{c:'color',t:'无意义的环境光',
+ see:'背景里飘着几团模糊的彩色光斑，内容区边缘泛着一圈光。',
+ why:'光斑不指向任何东西，却最先抓住视线。文字背后的颜色也被它染得忽深忽浅，同一段话的对比度不一样。',
+ fix:'删掉。删完如果页面显得空，说明内容本来就不够，问题不在缺光。',
+ bad:st(`<div class="ph" style="background:#0c0c16;color:#fff">
+   <div style="position:absolute;width:55%;height:80%;left:-10%;top:-20%;background:radial-gradient(closest-side,#7c3aed,transparent);opacity:.8"></div>
+   <div style="position:absolute;width:50%;height:70%;right:-8%;bottom:-25%;background:radial-gradient(closest-side,#06b6d4,transparent);opacity:.7"></div>
+   <div style="position:absolute;width:30%;height:40%;left:40%;top:30%;background:radial-gradient(closest-side,#ec4899,transparent);opacity:.45"></div>
+   <div style="position:relative;margin:auto;width:62%;text-align:center"><div style="font-size:1.7em;font-weight:900;line-height:1.2">智能财务，<br>一触即达</div>
+   <div style="margin-top:.8em;opacity:.65;font-size:.8em">让每一笔数据都闪闪发光</div></div></div>`
+   +mk(1,8,10)+mk(2,64,64)),
+ notes:['三团光，不对应任何内容','副标题后面先是粉色、再是黑色，同一行字一半清楚一半糊']},
+
+{c:'color',t:'玻璃拟态滥用',
+ see:'半透明的卡片，背后模糊，边缘一圈白色描边；卡片下面还垫着一张彩色背景。',
+ why:'毛玻璃要背后有东西才看得出来，于是又得先画一张花哨的底。两层装饰互相撑着，真正的数字夹在中间。',
+ fix:'用不透明的表面。需要分层，用一块实色或一条线就够。',
+ bad:st(`<div class="ph" style="background:linear-gradient(120deg,#f0abfc,#93c5fd 50%,#fde68a)">
+   <div style="position:absolute;width:40%;aspect-ratio:1;border-radius:50%;background:#a855f7;left:48%;top:8%"></div>
+   <div style="position:absolute;width:26%;aspect-ratio:1;border-radius:50%;background:#22d3ee;left:18%;top:52%"></div>
+   <div style="position:relative;margin:auto;width:66%;padding:1.4em 1.6em;border-radius:1.2em;background:rgba(255,255,255,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.7);color:#fff">
+   <div style="font-size:.75em;opacity:.9">账户余额</div><div style="font-size:2em;font-weight:900">¥ 12,480.00</div>
+   <div style="font-size:.7em;opacity:.85;margin-top:.3em">较上月 +8.2%</div></div></div>`
+   +mk(1,6,8)+rg(22,38,46,30)),
+ notes:['为了让人看出“这是玻璃”，背后必须先垫一层彩色','白色数字落在模糊的紫色和黄色上，读数要眯眼'],
+ good:st(`<div class="ph lz" style="background:#f3f3f1">${lzHead('本月')}<div style="margin:.6em 1.4em;background:#fff;border:1px solid #dcdcdc;padding:1em 1.2em">
+   <div style="font-size:.78em;color:#5c5c62">本月结余</div><div style="font-size:2em;font-weight:900" class="num">¥12,480</div>
+   <div style="font-size:.75em;color:#1e5b45;margin-top:.2em">比 10 月多 ¥946</div></div></div>`),
+ gnote:'一块白底、一条灰边。“比 10 月多 946 元”比“+8.2%”更容易被摊主看懂。'},
+
+{c:'color',t:'多层投影叠加',
+ see:'卡片有两三层柔和阴影，按钮有，输入框也有，整个页面像浮在半空。',
+ why:'阴影的意思是“这个东西在上面，能拿起来”。每样东西都浮起来，就分不出谁在上面了。',
+ fix:'默认不加阴影。只给真的盖在别的东西上面的元素：弹窗、下拉菜单、正在拖动的卡片。',
+ bad:st(`<div class="ph" style="background:#f6f6fb;padding:1.6em;gap:1em">
+   <div style="display:flex;gap:1em">${[1,2,3].map(()=>`<div style="flex:1;background:#fff;border-radius:.8em;padding:1em;box-shadow:0 .2em .4em rgba(0,0,0,.06),0 .8em 1.6em rgba(80,60,180,.14),0 1.6em 3.2em rgba(80,60,180,.1)">${L(70,'dk')}${L(90)}${L(50)}</div>`).join('')}</div>
+   <div style="display:flex;gap:1em;align-items:center"><div style="flex:1;background:#fff;border-radius:.6em;padding:.8em;box-shadow:0 .6em 1.4em rgba(80,60,180,.16)">${L(40)}</div>
+   <span class="pill" style="background:#6d28d9;color:#fff;font-size:.8em;box-shadow:0 .5em 1.4em rgba(109,40,217,.6)">提交</span></div></div>`
+   +mk(1,2,6)+mk(2,86,58)),
+ notes:['静止的卡片和浮层用了同一套阴影','按钮下面还有一圈紫色辉光'],
+ good:st(`<div class="ph lz">${lzHead()}<div style="padding:.4em 1.4em;font-size:.86em;position:relative">
+   <div class="row"><span>烤串</span><span>¥38</span></div><div class="row"><span>啤酒 ×4</span><span>¥32</span></div><div class="row"><span>烤馒头片</span><span>¥6</span></div>
+   <div style="position:absolute;right:1.4em;top:.4em;width:42%;background:#fff;border:1px solid #d6d6d6;box-shadow:0 .4em 1.2em rgba(0,0,0,.18);font-size:.95em">
+   <div style="padding:.45em .8em;background:#eef4f1">编辑这一笔</div><div style="padding:.45em .8em">复制</div><div style="padding:.45em .8em;color:#b42318">删除</div></div></div></div>`),
+ gnote:'整屏只有展开的菜单有阴影，因为它确实盖住了下面的账目。'},
+
+{c:'color',t:'频繁切换背景色',
+ see:'往下滚，每一段换一种底色：白、浅紫、深蓝、渐变、浅灰。',
+ why:'每换一次底色，读者就像进了另一个网站，要重新适应一次。真正需要突出的那一段，反而没办法再突出。',
+ fix:'全站一种底色。整页最多一处换色，留给最重要的那一段。',
+ bad:st(`<div class="ph">${[['#ffffff','#222'],['#ede9fe','#222'],['#1e1b4b','#fff'],['linear-gradient(90deg,#fbcfe8,#c7d2fe)','#222'],['#f1f5f9','#222']].map(([b,c])=>`<div style="flex:1;background:${b};color:${c};padding:.3em 1.6em;display:flex;align-items:center;gap:1em"><i class="ln" style="width:22%;background:currentColor;opacity:.55"></i>${L(40)}</div>`).join('')}</div>`
+   +mk(1,88,40)),
+ notes:['五段内容，五种底色，看不出哪一段更重要'],
+ good:st(`<div class="ph lz">${[0,1,2].map(()=>`<div style="flex:1;padding:.3em 1.6em;display:flex;align-items:center;gap:1em">${L(22,'dk')}${L(40)}</div>`).join('')}
+   <div style="flex:1.6;background:#1e5b45;color:#fff;padding:.4em 1.6em;display:flex;align-items:center;justify-content:space-between"><span><b style="font-size:1.2em">免费</b>　<span style="opacity:.85;font-size:.85em">一个摊位、一个手机，不收钱</span></span><span style="font-size:.8em;opacity:.85">多店铺 ¥12/月</span></div>
+   <div style="flex:1;padding:.3em 1.6em;display:flex;align-items:center;gap:1em">${L(22,'dk')}${L(40)}</div></div>`),
+ gnote:'只有价格那段换成深色。来看这一页的人，多半是想知道要不要钱。'},
+
+{c:'color',t:'颜色的意思不固定',
+ see:'同一种紫，一会儿是按钮，一会儿是会员标签，一会儿又是报错；绿色既表示“成功”，又表示“新功能”。',
+ why:'颜色一旦有两个意思，用户就不能再靠颜色判断，每次都得读字。',
+ fix:'写一张颜色表，每种颜色只做一件事：主要操作、链接、成功、警告、错误。表外的颜色不上页面。',
+ bad:st(`<div class="ph" style="padding:1.4em 1.8em;gap:.75em;font-size:.95em">
+   <div style="display:flex;align-items:center;gap:.6em"><b>账户设置</b><span class="pill" style="background:#ede9fe;color:#6d28d9;font-size:.7em;padding:.2em .7em">PRO</span><span class="pill" style="background:#dcfce7;color:#15803d;font-size:.7em;padding:.2em .7em">NEW</span></div>
+   <div style="border:1px solid #ddd;border-radius:.4em;padding:.5em .7em;color:#999;font-size:.85em">••••••</div>
+   <div style="color:#6d28d9;font-size:.8em">密码至少 8 位</div>
+   <div style="display:flex;gap:.8em;align-items:center"><span class="pill" style="background:#6d28d9;color:#fff;font-size:.8em">保存</span><span style="color:#15803d;font-size:.8em">已保存</span></div></div>`
+   +rg(28,8,26,18)+rg(2,52,32,16)+rg(4,72,24,20)+mk(1,56,6)+mk(2,36,52)),
+ notes:['紫色同时表示“会员”“报错”和“可以点”','绿色同时表示“新功能”和“保存成功”'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.6em;gap:.55em;font-size:.9em">${[['#1e5b45','主要操作','记一笔、保存'],['#2456a6','链接','查看明细'],['#2e7d32','成功','已保存'],['#b26a00','提醒','有 3 笔没核对'],['#b42318','错误','金额不能为空']].map(([c,a,b])=>`<div style="display:grid;grid-template-columns:1.3em 5em 1fr;align-items:center;gap:.7em"><i style="display:block;width:1.3em;height:1.3em;background:${c}"></i><b>${a}</b><span style="color:${c}">${b}</span></div>`).join('')}</div>`),
+ gnote:'一张表，五行。新加颜色之前先改这张表。'},
+
+{c:'color',t:'对比度不够',
+ see:'正文是浅灰色的小字；或者反过来，大面积荧光色铺满整屏。',
+ why:'浅灰小字看着“精致”，但在太阳底下、旧手机上、对年纪大一点的眼睛来说，等于没写。',
+ fix:'正文和背景的对比度至少 4.5 : 1（WCAG AA 标准），浏览器开发者工具里能直接看到。次要信息可以灰，但不要同时又小又灰。',
+ bad:st(`<div class="ph" style="background:#fafafa;padding:1.6em 1.8em;color:#b8b8b8">
+   <div style="font-size:1.1em;font-weight:500">关于退款</div>
+   <p style="font-size:.72em;line-height:1.7;margin:.5em 0">提交退款申请后，款项将在 3 至 7 个工作日内原路退回。如使用优惠券，优惠部分不予退还。超过 30 天的订单无法在线申请退款，请联系客服处理。</p>
+   <div style="font-size:.65em;color:#c4231a;font-family:var(--hand)">对比度 1.9 : 1</div></div>`
+   +rg(2,24,96,46)+mk(1,90,8)),
+ notes:['退款规则这种用户必须读的内容，用了最浅的灰'],
+ good:st(`<div class="ph" style="background:#fafafa;padding:1.6em 1.8em;color:#333">
+   <div style="font-size:1.1em;font-weight:700;color:#17171a">关于退款</div>
+   <p style="font-size:.82em;line-height:1.7;margin:.5em 0">退款 3 到 7 个工作日到账，原路退回。<b>优惠券抵扣的部分不退。</b>超过 30 天的订单，请联系客服。</p>
+   <div style="font-size:.65em;color:#1e5b45;font-family:var(--hand)">对比度 12.1 : 1</div></div>`),
+ gnote:'字加深、加大，最容易引起纠纷的那句加粗。'},
+
+{c:'color',t:'遮住 Logo 就认不出',
+ see:'把名字遮住，你的首页可以和竞争对手的首页互换。',
+ why:'用户记住一个产品，靠的是它特有的东西：一种说法、一张截图、一种颜色的用法。全用通用零件拼出来，就没有可记的东西。',
+ fix:'做一次遮 Logo 测试：把你和三家竞品的首页去掉名字放在一起，请一位外人来认。认不出，就找一样只有你有的东西放进首屏。',
+ bad:st(`<div class="ph" style="flex-direction:row;gap:3%;padding:4%;background:#f4f4f6">${['Acme','Nimbus'].map(n=>`<div style="flex:1;background:#fff;border-radius:.6em;padding:1em;display:flex;flex-direction:column;gap:.5em;font-size:.82em">
+   <div style="display:flex;justify-content:space-between"><b style="background:#222;color:#222;border-radius:.2em">${n}</b><span style="color:#aaa">≡</span></div>
+   <div style="font-weight:900;font-size:1.35em;line-height:1.2;margin-top:.6em">Smarter workflows for modern teams</div>
+   ${L(90)}${L(60)}<span class="pill" style="background:#4f46e5;color:#fff;align-self:flex-start;font-size:.85em">Start free</span>
+   <div style="flex:1;border-radius:.5em;background:linear-gradient(135deg,#e0e7ff,#fae8ff)"></div></div>`).join('')}</div>`
+   +mk(1,46,4)),
+ notes:['两家公司，同一张首页'],
+ good:st(`<div class="ph lz" style="flex-direction:row;background:#f3f3f1">
+   <div style="flex:1.1;padding:1.4em 1.6em"><b style="font-size:1em;letter-spacing:.04em">落账</b>
+   <div style="font-size:1.45em;font-weight:900;line-height:1.3;margin-top:.8em">收摊的时候，<br>账已经记完了。</div>
+   <div style="font-size:.78em;color:#5c5c62;margin-top:.6em">扫码收的钱自动入账，现金说一句话就记上。</div></div>
+   <div style="flex:.9;margin:1.2em 1.4em 0 0;background:#fffef7;border:1px dashed #b9b29a;padding:.8em 1em;font-family:'Courier New',monospace;font-size:.72em;line-height:1.6">
+   <div style="text-align:center">张姐烧烤 · 10月3日</div><div style="border-top:1px dashed #b9b29a;margin:.3em 0"></div>
+   <div style="display:flex;justify-content:space-between"><span>微信</span><span>2,106</span></div><div style="display:flex;justify-content:space-between"><span>支付宝</span><span>1,388</span></div><div style="display:flex;justify-content:space-between"><span>现金</span><span>612</span></div>
+   <div style="border-top:1px dashed #b9b29a;margin:.3em 0"></div><div style="display:flex;justify-content:space-between;font-weight:700"><span>合计</span><span>4,106</span></div></div></div>`),
+ gnote:'首屏放一张真实摊主的日结小票。只有记账软件会这样开场。'},
+
+/* ———————— 二 组件与装饰 ———————— */
+{c:'comp',t:'什么都是大圆角',
+ see:'卡片、输入框、图片、弹窗、整块区域，统统是 20 多像素的圆角。',
+ why:'圆角大小本来可以区分东西：哪些能点、哪些是容器、哪些是内容。全一样，这层信息就没了。大圆角还会切掉表格和图表的角。',
+ fix:'最多定两三档：控件小圆角（4 到 6 像素），浮层中等，表格、图片和内容区可以直接用直角。',
+ bad:st(`<div class="ph" style="background:#f4f4f6;padding:1.2em;gap:.8em;flex-direction:row">
+   <div style="flex:1;background:#fff;border-radius:1.6em;overflow:hidden;font-size:.78em">
+   ${['日期 收入 支出','10/01 3,120 840','10/02 2,876 1,102','10/03 4,106 960'].map((r,i)=>`<div style="display:flex;justify-content:space-between;padding:.55em 1em;${i?'':'background:#4f46e5;color:#fff;font-weight:700'}">${r.split(' ').map(x=>`<span>${x}</span>`).join('')}</div>`).join('')}</div>
+   <div style="flex:1;background:#fff;border-radius:1.6em;overflow:hidden;position:relative">
+   <svg viewBox="0 0 100 70" style="position:absolute;inset:0;width:100%;height:100%" preserveAspectRatio="none"><path d="M2 2 V68 H98" stroke="#999" fill="none" stroke-width=".8"/><path d="M2 60 L25 45 L50 50 L75 25 L98 15" stroke="#4f46e5" fill="none" stroke-width="2"/></svg></div></div>`
+   +rg(2,3,16,24)+mk(1,4,44)+rg(48,72,14,26)+mk(2,64,86)),
+ notes:['表头的左上角被圆角吃掉','图表的坐标原点被裁出了框'],
+ good:st(`<div class="ph lz" style="padding:1.2em;gap:.8em;flex-direction:row;background:#f3f3f1">
+   <div style="flex:1;background:#fff;border:1px solid #dcdcdc;font-size:.78em">
+   ${['日期 收入 支出','10/01 3,120 840','10/02 2,876 1,102','10/03 4,106 960'].map((r,i)=>`<div style="display:flex;justify-content:space-between;padding:.55em 1em;border-bottom:1px solid #eee;${i?'':'font-weight:700'}">${r.split(' ').map(x=>`<span>${x}</span>`).join('')}</div>`).join('')}</div>
+   <div style="flex:1;background:#fff;border:1px solid #dcdcdc;position:relative">
+   <svg viewBox="0 0 100 70" style="position:absolute;inset:0;width:100%;height:100%" preserveAspectRatio="none"><path d="M8 4 V62 H96" stroke="#999" fill="none" stroke-width=".8"/><path d="M8 54 L30 41 L52 45 L74 23 L96 14" stroke="#1e5b45" fill="none" stroke-width="2"/></svg></div></div>`),
+ gnote:'表格和图表是方的，容器也就用方的。'},
+
+{c:'comp',t:'什么都做成胶囊',
+ see:'导航是胶囊，按钮是胶囊，状态标签、筛选条件、开关，还是胶囊。',
+ why:'形状一样，用户就分不清哪个能点、哪个只是显示状态、哪个点了会提交。',
+ fix:'让形状跟着用途走：按钮一种，筛选一种。状态标签干脆不要外框，用文字和颜色就够。',
+ bad:st(`<div class="ph" style="padding:1.4em 1.6em;gap:1.1em;font-size:.86em">
+   <div style="display:flex;gap:.5em;flex-wrap:wrap">${['首页','账单','报表'].map((x,i)=>`<span class="pill" style="background:${i==1?'#4f46e5':'#eef'};color:${i==1?'#fff':'#4f46e5'}">${x}</span>`).join('')}</div>
+   <div style="display:flex;gap:.5em;flex-wrap:wrap"><span class="pill" style="background:#eef;color:#4f46e5">本月 ▾</span><span class="pill" style="background:#eef;color:#4f46e5">已付款</span><span class="pill" style="background:#4f46e5;color:#fff">导出</span></div>
+   <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding-top:.8em"><span>10/03 进货·啤酒</span><span class="pill" style="background:#eef;color:#4f46e5">已付款</span></div></div>`
+   +mk(1,52,8)+mk(2,64,36)),
+ notes:['导航和按钮长得一模一样','“本月”是筛选，“已付款”是状态，“导出”是按钮，三个分不出来'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.6em;gap:1em;font-size:.86em">
+   <div style="display:flex;gap:1.6em;border-bottom:1px solid #e3e3e3"><span style="padding-bottom:.4em">首页</span><span style="padding-bottom:.4em;border-bottom:.15em solid #1e5b45;font-weight:700">账单</span><span>报表</span></div>
+   <div style="display:flex;gap:.8em;align-items:center"><span style="border:1px solid #bbb;padding:.25em .6em;border-radius:.2em">本月 ▾</span><span style="flex:1"></span><span class="btn">导出 Excel</span></div>
+   <div style="display:flex;justify-content:space-between"><span>10/03 进货·啤酒</span><span style="color:#2e7d32">● 已付款</span></div></div>`),
+ gnote:'导航是带下划线的文字，筛选是下拉框，按钮是实心的方块，状态只是一点颜色。'},
+
+{c:'comp',t:'到处挂徽章',
+ see:'菜单里一半的项目挂着 NEW、HOT、BETA，首页还有一个一闪一闪的 LIVE。',
+ why:'徽章是用来打断人的。到处都是，就打断不了任何人。挂了半年的 NEW 也没人记得取下来。',
+ fix:'只在会改变用户行为的时候显示：功能还不稳定、要另外付费、有未读的东西。每个徽章写好撤下的日期。',
+ bad:st(`<div class="ph" style="padding:1.2em 1.6em;font-size:.88em;gap:.3em">${[['仪表盘','NEW','#16a34a'],['智能分析','AI','#7c3aed'],['数据洞察','HOT','#ea580c'],['团队协作','BETA','#2563eb'],['高级报表','PRO','#ca8a04'],['设置','','']].map(([a,b,c])=>`<div style="display:flex;align-items:center;gap:.6em;padding:.38em 0">${L(8,'dk')}<span>${a}</span>${b?`<span style="background:${c};color:#fff;font-size:.62em;font-weight:700;padding:.1em .45em;border-radius:.3em">${b}</span>`:''}</div>`).join('')}</div>`
+   +rg(32,10,22,72)+mk(1,56,40)),
+ notes:['六个菜单项，五个徽章'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.6em;font-size:.88em;gap:.3em">${[['今天',''],['账单',''],['对账','3'],['报表',''],['设置','']].map(([a,b])=>`<div style="display:flex;align-items:center;gap:.6em;padding:.38em 0"><span>${a}</span>${b?`<span style="background:#b26a00;color:#fff;font-size:.7em;font-weight:700;padding:0 .5em;border-radius:1em">${b}</span><span style="color:#b26a00;font-size:.75em">笔没核对</span>`:''}</div>`).join('')}</div>`),
+ gnote:'只剩一个数字：有 3 笔账需要摊主去看。'},
+
+{c:'comp',t:'卡片套卡片',
+ see:'带底色和圆角的大框里，放着带底色和圆角的小框，小框里还有一个带底色的标签。',
+ why:'每套一层，就多一圈边距、一道边，内容被一圈圈挤到中间。读者看到的是盒子，而不是信息。',
+ fix:'只保留最外面或最里面的一层。分组用间距和小标题，不用框。',
+ bad:st(`<div class="ph" style="background:#f1f1f5;padding:1em">
+   <div style="flex:1;background:#fff;border-radius:1em;padding:1em;border:1px solid #e5e5ef">
+   <div style="font-size:.85em;font-weight:700;margin-bottom:.6em">本周概览</div>
+   <div style="background:#f7f7fb;border-radius:.8em;padding:.8em;border:1px solid #e5e5ef;display:flex;gap:.6em">
+   ${[0,1].map(()=>`<div style="flex:1;background:#fff;border-radius:.6em;padding:.6em;border:1px solid #e5e5ef"><div style="background:#eef;border-radius:.4em;padding:.4em;font-size:.65em;color:#4f46e5">收入 ↑</div>${L(70,'dk')}</div>`).join('')}</div></div></div>`
+   +rg(24,44,26,30)+mk(1,52,44)),
+ notes:['四层框，最里面那层只放得下两个字'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.6em">
+   <div style="font-size:.85em;font-weight:700">本周</div>
+   <div style="display:flex;gap:3em;margin-top:.6em"><div><div style="font-size:.75em;color:#5c5c62">收入</div><div style="font-size:1.8em;font-weight:900" class="num">¥19,204</div></div><div><div style="font-size:.75em;color:#5c5c62">支出</div><div style="font-size:1.8em;font-weight:900" class="num">¥6,350</div></div></div>
+   <div style="font-size:.78em;color:#5c5c62;margin-top:.8em">周六最忙，收了 ¥4,106。</div></div>`),
+ gnote:'零个框。靠字号和间距分组，数字有了足够的位置。'},
+
+{c:'comp',t:'每行配一个线性图标',
+ see:'每个功能前面都有一个出自同一个图标库的细线小图标：闪电、盾牌、火箭、柱状图。',
+ why:'“闪电表示快、盾牌表示安全”这类图标不帮人识别，只在每行开头占一个位置。用户还是要读完字才知道是什么。',
+ fix:'问一句：去掉这个图标，用户会找不到这一项吗？不会就去掉。导航栏、工具栏这种需要快速扫一眼的地方，图标才值得留下。',
+ bad:st(`<div class="ph" style="padding:1.4em 2em;gap:1.1em;font-size:.95em">${[['M13 2 L4 14 H12 L11 22 L20 10 H12 Z','极速体验','毫秒级响应，效率倍增'],['M12 2 L20 6 V12 C20 17 16 21 12 22 C8 21 4 17 4 12 V6 Z','安全可靠','银行级加密，守护数据'],['M5 19 C5 12 9 5 18 3 C17 11 12 15 5 19 Z M8 16 L4 20','快速增长','助力业务腾飞']].map(([d,a,b])=>`<div style="display:flex;gap:1em;align-items:center"><svg viewBox="0 0 24 24" style="width:2em;height:2em;flex:none" fill="none" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"><path d="${d}"/></svg><div><b>${a}</b><div style="font-size:.78em;color:#888">${b}</div></div></div>`).join('')}</div>`
+   +rg(3,10,15,82)+mk(1,18,6)),
+ notes:['闪电、盾牌、火箭，可以配给任何一个产品'],
+ good:st(`<div class="ph lz" style="padding:1.4em 2em;gap:.9em;font-size:.95em">${[['扫码收的钱，自动入账','微信和支付宝的收款记录每 10 分钟同步一次'],['晚上 10 点发当天小结','收了多少、花了多少、哪样卖得最好'],['一键导出给会计','月底生成 Excel，格式按代账公司的要求']].map(([a,b])=>`<div><b>${a}</b><div style="font-size:.78em;color:#5c5c62">${b}</div></div>`).join('')}</div>`),
+ gnote:'没有图标，标题直接说清楚是什么功能。'},
+
+{c:'comp',t:'用 Emoji 装点',
+ see:'标题前一个火箭，卡片角落一个闪光，功能列表每行一个灯泡、靶子或火苗。',
+ why:'Emoji 在不同手机上长得不一样，语气又全是“兴奋”。一份正经的产品说明里塞满兴奋，读起来像传单。',
+ fix:'删掉。真正需要情绪的地方（比如完成一件事之后），用一句具体的话代替。',
+ bad:`<div class="proof"><div><del>🚀</del> 开启你的增长之旅 <del>✨</del></div>
+   <div class="sm" style="margin-top:.6em"><del>💡</del> 智能分析　<del>🎯</del> 精准洞察　<del>🔥</del> 极速上手</div>
+   <div class="sm" style="margin-top:.6em">🎉 太棒了！你已完成第一笔记账！🥳</div>
+   <ins>记好了。今天第 1 笔，¥38。</ins></div>`,
+ notes:['每一行都在兴奋，最后一行的兴奋还盖住了金额']},
+
+{c:'comp',t:'用抽象图形填空',
+ see:'背景里有点阵、网格、漂浮的圆、半透明几何体，还有一串细线连起来的“神经网络”。',
+ why:'这些图形不描述产品的任何部分，只是让空的地方看起来不空。',
+ fix:'把位置还给内容。内容不够，就把版面收紧，不要用图形去填。',
+ bad:st(`<div class="ph" style="background:#fbfbff;background-image:radial-gradient(#c7c7e0 .08em,transparent .09em);background-size:1.2em 1.2em">
+   <svg viewBox="0 0 160 100" style="position:absolute;inset:0;width:100%;height:100%"><g stroke="#a5b4fc" stroke-width=".4" fill="none"><path d="M10 80 L40 60 L70 72 L100 40 L130 52 L150 20"/><path d="M40 60 L60 30 L100 40"/><path d="M70 72 L95 90 L130 52"/></g>
+   <g fill="#818cf8">${[[10,80],[40,60],[70,72],[100,40],[130,52],[150,20],[60,30],[95,90]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.6"/>`).join('')}</g>
+   <circle cx="135" cy="25" r="18" fill="#c4b5fd" opacity=".35"/><circle cx="22" cy="20" r="10" fill="#f9a8d4" opacity=".35"/><rect x="115" y="68" width="22" height="22" fill="#93c5fd" opacity=".3" transform="rotate(20 126 79)"/></svg>
+   <div style="position:relative;margin:auto;text-align:center;font-weight:900;font-size:1.1em">连接数据，<br>洞见未来</div></div>`
+   +mk(1,4,4)),
+ notes:['背景图形占了七成画面，标题只占中间一小块']},
+
+{c:'comp',t:'什么都加边框',
+ see:'标题有框，段落有框，按钮有框，表格每一格有框，外面还有一个大框。',
+ why:'线多到一定程度，就不再表示“这里有个边界”，只剩噪音。',
+ fix:'先把边框全部去掉，再一条一条加回来。只有去掉之后分不清范围的地方，才把线加回去。',
+ bad:st(`<div class="ph" style="padding:1em;"><div style="flex:1;border:1px solid #999;padding:.8em;display:flex;flex-direction:column;gap:.6em;font-size:.85em">
+   <div style="border:1px solid #999;padding:.3em .6em;font-weight:700">今日账目</div>
+   <div style="display:grid;grid-template-columns:2fr 1fr 1fr">${['品名','数量','金额','烤串','12','38','啤酒','4','32'].map(x=>`<span style="border:1px solid #999;padding:.25em .5em">${x}</span>`).join('')}</div>
+   <div style="display:flex;gap:.6em"><span style="border:1px solid #999;padding:.25em .8em">编辑</span><span style="border:1px solid #999;padding:.25em .8em">删除</span><span style="border:1px solid #999;padding:.25em .8em">导出</span></div></div></div>`
+   +mk(1,90,6)),
+ notes:['数一下：二十条线，框住的只有九个字'],
+ good:st(`<div class="ph lz" style="padding:1.4em 1.8em;gap:.6em;font-size:.85em">
+   <b style="font-size:1.05em">今日账目</b>
+   <div style="display:grid;grid-template-columns:2fr 1fr 1fr">${['品名','数量','金额'].map(x=>`<span style="padding:.25em 0;border-bottom:1.5px solid #1b1b1b;font-weight:700">${x}</span>`).join('')}${['烤串','12','38','啤酒','4','32'].map(x=>`<span style="padding:.25em 0">${x}</span>`).join('')}</div>
+   <div style="display:flex;gap:1.2em;align-items:center;margin-top:.4em"><span class="btn">导出</span><span style="color:#2456a6">编辑</span><span style="color:#b42318">删除</span></div></div>`),
+ gnote:'只留表头下面一条线。'},
+
+/* ———————— 三 布局 ———————— */
+{c:'layout',t:'三列等宽卡片',
+ see:'三个功能、三个优点、三个套餐，永远是三列，一样宽一样高。',
+ why:'三件事不可能一样重要。并排摆等于告诉读者“自己挑吧”，而读者一般不会挑。',
+ fix:'先排出主次。最重要的那项给大块面积，其余的缩成一行字也可以。内容不是三项，就别凑成三项。',
+ bad:st(`<div class="ph" style="padding:1.6em;gap:1em"><div style="text-align:center;font-weight:900">为什么选择我们</div>
+   <div style="display:flex;gap:1em;flex:1">${['高效','安全','智能'].map(x=>`<div style="flex:1;border:1px solid #e5e5ef;border-radius:.8em;padding:1em;text-align:center"><div style="width:2em;height:2em;border-radius:.5em;background:#eef;margin:0 auto .6em"></div><b>${x}</b>${L(90)}${L(70)}</div>`).join('')}</div></div>`
+   +mk(1,90,40)),
+ notes:['三张卡一样大。看不出哪一条才是用户要选你的理由'],
+ good:st(`<div class="ph lz" style="padding:1.4em 1.6em;flex-direction:row;gap:1.4em">
+   <div style="flex:1.5"><b style="font-size:1.25em;line-height:1.3;display:block">扫码收的钱，<br>自动记进账里</b>
+   <div style="font-size:.78em;color:#5c5c62;margin:.5em 0">不用再对着手机一笔一笔抄。</div>
+   <div style="border:1px solid #ddd;padding:.5em .7em;font-size:.72em">${['21:14 微信 ¥38','21:16 支付宝 ¥15','21:20 微信 ¥62'].map(r=>`<div class="row" style="border-color:#eee"><span>${r.slice(0,9)}</span><span>${r.slice(9)}</span></div>`).join('')}</div></div>
+   <div style="flex:1;font-size:.8em;display:flex;flex-direction:column;gap:.8em;justify-content:center;border-left:1px solid #e3e3e3;padding-left:1.2em"><div><b>现金</b>：说一句“烤串三十八”就记上</div><div><b>月底</b>：一键导出给会计</div></div></div>`),
+ gnote:'主要卖点占六成面积并附上真实界面，另外两条各一句话。'},
+
+{c:'layout',t:'首屏三件套',
+ see:'首屏一行大标题、一行灰色副标题、一个按钮，右边一张插图。',
+ why:'这个结构本身没错，错在不假思索地套用。访客来首页想确认的事各不相同：书店的访客想看书，工具的访客想看界面，餐厅的访客想看菜单和地址。',
+ fix:'先写下“访客来这一页最想确认的一件事”，首屏就放那件事本身。',
+ bad:st(`<div class="ph" style="flex-direction:row;padding:1.6em;gap:1.4em;align-items:center">
+   <div style="flex:1"><div style="font-size:1.6em;font-weight:900;line-height:1.2">让记账<br>更简单</div><div style="color:#999;font-size:.75em;margin:.6em 0 1em">一站式智能财务管理平台</div><span class="pill" style="background:#4f46e5;color:#fff;font-size:.8em">立即开始</span></div>
+   <div style="flex:1;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c4b5fd,#6366f1 60%,#312e81)"></div></div>`
+   +mk(1,6,10)+mk(2,52,10)),
+ notes:['标题、副标题、按钮，看完还是不知道它长什么样','插图位置放了一个紫色的球'],
+ good:st(`<div class="ph lz" style="flex-direction:row;background:#f3f3f1">
+   <div style="flex:1;padding:1.4em 1.6em"><b style="letter-spacing:.04em">落账</b><div style="font-size:1.05em;font-weight:700;margin-top:1em">个体户记账，免费。</div><div style="font-size:.75em;color:#5c5c62;margin-top:.3em">安卓和苹果都能用，不用注册公司。</div>
+   <div style="margin-top:1em"><span class="btn">下载</span></div></div>
+   <div style="width:34%;margin:1.2em 1.6em 0 0;background:#fff;border:.3em solid #222;border-bottom:0;border-radius:1em 1em 0 0;padding:.6em;font-size:.6em">
+   <div style="color:#5c5c62">记一笔</div><div style="border-bottom:1px solid #1e5b45;padding:.4em 0;font-size:1.4em">烤串 <b>38</b></div>
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3em;margin-top:.6em">${'123456789'.split('').map(n=>`<span style="background:#eee;text-align:center;padding:.3em 0">${n}</span>`).join('')}</div></div></div>`),
+ gnote:'首屏直接是“记一笔”的界面。'},
+
+{c:'layout',t:'机械的左右交替',
+ see:'左图右文，右图左文，再左图右文……一直排到页脚。',
+ why:'交替只是在制造变化的样子，内容之间的关系（先后、对比、并列）一点也没体现出来。',
+ fix:'按内容的关系来排：步骤用编号竖着排，对比放在一起，补充说明用小字跟在后面。',
+ bad:st(`<div class="ph" style="padding:1em 1.6em;gap:.8em">${[0,1,0].map(r=>`<div style="flex:1;display:flex;gap:1.2em;align-items:center;flex-direction:${r?'row-reverse':'row'}"><div style="width:38%;height:100%;background:#e8e8f4;border-radius:.4em"></div><div style="flex:1">${L(50,'dk')}${L(90)}${L(70)}</div></div>`).join('')}</div>`
+   +mk(1,46,46)),
+ notes:['三步操作被排成了三个互不相干的展示块'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.6em;gap:.6em;font-size:.88em"><b>三步开始记账</b>
+   ${[['1','下载落账，用手机号登录'],['2','绑定微信和支付宝收款码'],['3','收摊前看一眼今天的小结']].map(([n,t])=>`<div style="display:grid;grid-template-columns:1.8em 1fr;gap:.6em;align-items:baseline"><b style="font-size:1.4em;color:#1e5b45">${n}</b><span>${t}</span></div>`).join('')}
+   <div style="font-size:.72em;color:#5c5c62">第 2 步大概需要 2 分钟，不需要营业执照。</div></div>`),
+ gnote:'本来就是一个顺序，那就按顺序竖着排。'},
+
+{c:'layout',t:'留白太多',
+ see:'一屏只有一句话，滚到第五屏才看见第一个具体信息。',
+ why:'留白要围着内容才有意义。没有内容可以围，就只是空。读者的耐心比设计师以为的少。',
+ fix:'首屏至少出现一项具体信息：价格、截图、一个数字或者地址。拿“一屏一句话”的版本去给真实用户看，记下他们在第几屏放弃。',
+ bad:st(`<div class="ph" style="align-items:center;justify-content:center"><div style="font-size:1.4em;font-weight:300;letter-spacing:.3em">简 单 。</div>
+   <div style="position:absolute;right:.6em;top:.6em;bottom:.6em;width:.3em;background:#eee;border-radius:1em"><div style="height:8%;background:#bbb;border-radius:1em"></div></div></div>`
+   +mk(1,40,30)+mk(2,90,4)),
+ notes:['整屏只有两个字','滚动条显示：这样的屏还有十一屏'],
+ good:st(`<div class="ph lz">${lzHead('免费')}<div style="padding:.6em 1.4em;display:flex;gap:1.4em">
+   <div style="flex:1"><b style="font-size:1.25em;line-height:1.35;display:block">简单：<br>收摊前看一眼就行。</b><div style="font-size:.75em;color:#5c5c62;margin-top:.5em">今天收了多少、花了多少、赚了多少，一屏看完。</div></div>
+   <div style="flex:1;font-size:.78em"><div class="row"><span>收入</span><b>¥2,318</b></div><div class="row"><span>进货</span><span>−¥760</span></div><div class="row"><span>今天赚了</span><b style="color:#1e5b45">¥1,558</b></div></div></div></div>`),
+ gnote:'同样说“简单”，旁边直接给出简单的样子。'},
+
+{c:'layout',t:'到处都是分割线',
+ see:'区块之间一条线，标题下面一条线，页脚上方一条线，列表每行之间又一条线。',
+ why:'间距本身就能分组，再画线等于把同一件事说两遍。',
+ fix:'先用间距分组。只在数据表格、需要横向对齐的列表这类地方用线。',
+ bad:st(`<div class="ph" style="padding:1em 1.8em">${[0,1,2,3].map(i=>`<div style="padding:.5em 0;border-bottom:1px solid #bbb">${L(i%2?30:20,'dk')}<div style="border-top:1px solid #ddd;margin:.3em 0"></div>${L(80)}${L(60)}</div>`).join('')}</div>`
+   +mk(1,90,40)),
+ notes:['四段内容用了八条线'],
+ good:st(`<div class="ph lz" style="padding:1.2em 1.8em;gap:1.3em">${[0,1,2].map(i=>`<div>${L(i%2?30:20,'dk')}${L(80)}${L(60)}</div>`).join('')}</div>`),
+ gnote:'段与段之间的空隙比段落里的行距大一倍，线就不需要了。'},
+
+{c:'layout',t:'硬切分栏',
+ see:'不管放什么内容，页面都切成“左侧栏 + 正文 + 右侧栏”，或者一刀切成左右两半。',
+ why:'分栏是为了让人同时看两样东西。如果用户一次只看一样，分栏只会让每一栏都变窄。',
+ fix:'先问“用户需要同时看见哪两样东西”。答不上来，就用单栏。',
+ bad:st(`<div class="ph" style="flex-direction:row;padding:1em;gap:1em">
+   <div style="width:22%;background:#f4f4f8;padding:.6em;font-size:.65em;color:#888">热门标签<br>${L(80)}${L(60)}${L(70)}</div>
+   <div style="flex:1;font-size:.62em;line-height:1.55"><b style="font-size:1.4em">新手如何开始记账</b><p style="margin:.4em 0">刚开始摆摊的时候，很多人都觉得记账是件麻烦事。每天收摊已经很累了，谁还有力气对着手机一笔一笔地输入呢？其实只要养成两个小习惯……</p></div>
+   <div style="width:22%;background:#f4f4f8;padding:.6em;font-size:.65em;color:#888">推荐阅读<br>${L(80)}${L(60)}</div></div>`
+   +mk(1,46,80)),
+ notes:['正文被两边挤得一行只剩十几个字，两边的栏几乎没人看'],
+ good:st(`<div class="ph lz" style="padding:1.2em 18%;font-size:.7em;line-height:1.7"><b style="font-size:1.45em">新手如何开始记账</b><p style="margin:.4em 0">刚开始摆摊的时候，很多人都觉得记账麻烦：每天收摊已经很累了，谁还有力气对着手机一笔一笔地输入？其实只要养成两个小习惯就够了。</p><p style="margin:0;color:#5c5c62">第一，收款码绑定之后就别管了……</p></div>`),
+ gnote:'这是一篇要从头读到尾的文章，用单栏，一行三十字左右。'},
+
+{c:'layout',t:'栅格太死板',
+ see:'所有模块一样宽、一样高，排成整整齐齐的方阵，像一张 Excel 表。',
+ why:'一样大的格子把内容的差别抹平了：一条重要通知和“关于我们”占同样大的面积。',
+ fix:'栅格用来对齐，不用来平分面积。面积按重要程度来给。',
+ bad:st(`<div class="ph" style="padding:1em;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:.6em">${['今日收入','本月趋势','系统公告','帮助中心','关于我们','联系客服'].map(x=>`<div style="background:#f1f1f6;border-radius:.4em;padding:.6em;font-size:.75em"><b>${x}</b>${L(70)}</div>`).join('')}</div>`
+   +mk(1,4,4)+mk(2,64,4)),
+ notes:['“今日收入”是每天都看的，“关于我们”一年看不了一次，面积却一样','两个格子说的是同一件事'],
+ good:st(`<div class="ph lz" style="padding:1em;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:2fr 1fr;gap:.6em">
+   <div style="grid-row:span 2;background:#f3f3f1;padding:.8em 1em"><div style="font-size:.75em;color:#5c5c62">今日收入</div><div style="font-size:2em;font-weight:900">¥2,318</div>
+   <svg viewBox="0 0 100 30" style="width:100%;margin-top:.4em"><path d="M0 26 L14 22 L28 24 L42 16 L56 18 L70 9 L84 12 L100 4" fill="none" stroke="#1e5b45" stroke-width="1.5"/></svg></div>
+   <div style="background:#f3f3f1;padding:.6em .8em;font-size:.72em"><b>本月</b><div style="font-size:1.6em;font-weight:900">¥41,086</div></div>
+   <div style="padding:.4em .2em;font-size:.65em;color:#5c5c62;line-height:1.7">帮助 · 客服 · 关于</div></div>`),
+ gnote:'最常看的占一半以上，最不常看的缩成一行小字。'},
+
+{c:'layout',t:'对齐不统一',
+ see:'标题从 24 像素开始，图片从 32 像素开始，按钮又居中，左边缘参差不齐。',
+ why:'眼睛顺着左边缘往下扫。边缘一乱，页面就像没做完。',
+ fix:'定一条主对齐线，所有文字、图片和按钮的左边缘都落在这条线上。可以在开发者工具里拉一条竖线来检查。',
+ bad:st(`<div class="ph" style="padding:1em 0">
+   <div style="margin-left:7%;font-weight:900;font-size:1.2em">本月账单</div>
+   <div style="margin-left:11%;width:70%;height:30%;background:#e8e8f4;margin-top:.6em"></div>
+   <div style="margin-left:9%;margin-top:.6em;width:60%">${L(100)}${L(80)}</div>
+   <div style="text-align:center;margin-top:.6em"><span class="pill" style="background:#4f46e5;color:#fff;font-size:.8em">查看详情</span></div></div>
+   <i class="vl" style="left:7%"></i><i class="vl" style="left:9%"></i><i class="vl" style="left:11%"></i>`
+   +mk(1,14,4)),
+ notes:['四样东西，四个左边缘'],
+ good:st(`<div class="ph lz" style="padding:1em 0 1em 9%">
+   <div style="font-weight:900;font-size:1.2em">本月账单</div>
+   <div style="width:80%;height:30%;background:#eef2ef;margin-top:.6em"></div>
+   <div style="margin-top:.6em;width:70%">${L(100)}${L(80)}</div>
+   <div style="margin-top:.6em"><span class="btn">查看明细</span></div></div><i class="vl" style="left:9%;border-color:#1e5b45"></i>`),
+ gnote:'一条线。'},
+
+{c:'layout',t:'重心被装饰抢走',
+ see:'页面上最大、最亮的东西是一个装饰用的 3D 球，真正的标题和按钮缩在角落里。',
+ why:'人先看最大、最亮的东西。那个东西不带信息，第一眼就浪费了。',
+ fix:'把页面截图模糊一下，或者眯起眼睛看。最先跳出来的那块，必须是你最想让人看到的。',
+ bad:st(`<div class="ph" style="background:#0f0f1e">
+   <div style="position:absolute;width:62%;aspect-ratio:1;border-radius:50%;right:-6%;top:-10%;background:radial-gradient(circle at 30% 30%,#fde68a,#f472b6 35%,#7c3aed 70%,#1e1b4b)"></div>
+   <div style="position:absolute;left:6%;bottom:12%;color:#fff;font-size:.72em"><b style="font-size:1.1em">智能记账</b><div style="opacity:.6">更轻松的生活方式</div><span class="pill" style="background:#fff;color:#000;margin-top:.5em;font-size:.85em;padding:.2em .8em">了解</span></div></div>`
+   +mk(1,50,6)+mk(2,4,58)),
+ notes:['画面里最抢眼的是一个球','产品名和按钮缩在左下角']},
+
+{c:'layout',t:'控件尺寸过大',
+ see:'导航栏 96 像素高，按钮 64 像素高、占去半个屏宽，一张卡片就把笔记本屏幕占满了。',
+ why:'控件变大不会更好用，只会让一屏能看到的内容变少，常用操作反倒要滚动才找得到。',
+ fix:'按使用频率定大小：一天点十次的按钮可以大一点，一个月点一次的可以小。桌面端按钮高 36 到 44 像素就够了。',
+ bad:st(`<div class="ph"><div style="height:30%;border-bottom:1px solid #eee;display:flex;align-items:center;padding:0 1.6em;justify-content:space-between"><b style="font-size:1.3em">◆ Ledger</b><span class="pill" style="background:#4f46e5;color:#fff;font-size:1.1em;padding:.6em 1.8em">登录</span></div>
+   <div style="padding:1em 1.6em"><div style="background:#f1f1f6;border-radius:1em;height:7em;padding:1em"><b>今日收入</b></div></div></div>`
+   +mk(1,2,10)+mk(2,52,60)),
+ notes:['导航栏占了三成屏高','一张卡片只放了四个字，下面的内容全被挤出屏幕'],
+ good:st(`<div class="ph lz"><div style="height:13%;border-bottom:1px solid #e3e3e3;display:flex;align-items:center;padding:0 1.6em;justify-content:space-between;font-size:.8em"><b>落账</b><span>张姐烧烤 ▾</span></div>
+   <div style="padding:.8em 1.6em;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1em;font-size:.78em">${[['今日收入','2,318'],['今日支出','760'],['本月','41,086']].map(([a,b])=>`<div><div style="color:#5c5c62">${a}</div><b style="font-size:1.5em">${b}</b></div>`).join('')}</div>
+   <div style="padding:0 1.6em;font-size:.72em">${['21:20 微信 烤串 62','21:16 支付宝 啤酒 15','21:14 微信 烤串 38'].map(r=>`<div class="row"><span>${r.split(' ').slice(0,3).join(' ')}</span><span>${r.split(' ')[3]}</span></div>`).join('')}</div></div>`),
+ gnote:'同一块屏幕，放下了三个汇总数字和最近的三笔流水。'},
+
+{c:'layout',t:'手机端直接堆起来',
+ see:'桌面上并排的十二张卡片，到了手机上变成十二屏长的一条竖列。',
+ why:'手机屏幕小，多半单手操作，常用的东西应该在拇指够得着的地方。原样堆叠只是把桌面版压窄。',
+ fix:'为手机重新排一遍优先级：最常用的两三样放前面，其余的折叠起来或者放进二级页面。',
+ bad:st(`<div class="ph" style="flex-direction:row;justify-content:center;gap:12%;padding-top:.8em;background:#f4f4f6">
+   <div style="width:28%;background:#fff;border:.25em solid #222;border-bottom:0;border-radius:1em 1em 0 0;padding:.5em;display:flex;flex-direction:column;gap:.4em;overflow:hidden">${[0,1,2,3,4].map(()=>`<div style="background:#f1f1f6;border-radius:.4em;padding:.4em;flex:none;height:3.6em">${L(50,'dk')}${L(80)}</div>`).join('')}</div>
+   <div style="font-size:.7em;color:#888;align-self:center">↓ 还有 7 张卡片<br>↓ 约 11 屏</div></div>`
+   +mk(1,26,30)),
+ notes:['“记一笔”在第九张卡片里，要往下滑十屏'],
+ good:st(`<div class="ph lz" style="flex-direction:row;justify-content:center;padding-top:.8em;background:#f3f3f1">
+   <div style="width:28%;background:#fff;border:.25em solid #222;border-bottom:0;border-radius:1em 1em 0 0;display:flex;flex-direction:column;font-size:.62em;position:relative">
+   <div style="padding:.6em .8em"><div style="color:#5c5c62">今天收了</div><b style="font-size:2em">¥2,318</b></div>
+   <div style="padding:0 .8em">${['烤串 62','啤酒 15','烤串 38'].map(r=>`<div class="row"><span>${r.split(' ')[0]}</span><span>${r.split(' ')[1]}</span></div>`).join('')}</div>
+   <div style="margin-top:auto;display:flex;border-top:1px solid #ddd;text-align:center"><span style="flex:1;padding:.5em 0">账单</span><span style="flex:1;padding:.5em 0;background:#1e5b45;color:#fff;font-weight:700">＋ 记一笔</span><span style="flex:1;padding:.5em 0">报表</span></div></div></div>`),
+ gnote:'“记一笔”放在屏幕底部正中，拇指一下就能碰到。'},
+
+/* ———————— 四 字与文案 ———————— */
+{c:'type',t:'中文标题上压一行英文',
+ see:'中文标题上方一行小号大写英文：OUR SERVICES、ABOUT US、WHY CHOOSE US。',
+ why:'读者是中文用户，这行英文他们不读。它只是在模仿外国杂志，删掉之后什么信息都没少。',
+ fix:'删掉。真的需要一个小标签，就用中文写，而且写点有用的，比如“适合一个人看店的小摊”。',
+ bad:`<div class="proof"><div class="lbl"><del>WHY CHOOSE US</del></div><ins>适合一个人看店的小摊</ins><b style="font-size:1.3em">为什么选择我们</b>
+   <div class="lbl" style="margin-top:1.2em"><del>OUR SERVICES</del></div><ins style="margin-bottom:.1em">（删去，下面的标题已经说了）</ins><b style="font-size:1.3em">我们能做什么</b></div>`,
+ notes:['第一行英文换成了有用的中文；第二行直接删掉']},
+
+{c:'type',t:'装模作样的编号',
+ see:'SECTION 01、FIG. 02、VOL.03、N°04，可是页面上没有任何一处引用这些编号。',
+ why:'编号是给人引用的，比如“见图 3”。没人引用的编号只是装饰，还占了标题前面最显眼的位置。',
+ fix:'只给会被引用、会被查找的东西编号：操作步骤、条款，或者这本图鉴里的条目。',
+ bad:`<div class="proof"><div class="lbl"><del>SECTION 01</del></div><b>关于我们</b><div class="sm" style="margin:.4em 0 1em">2019 年从一个夜市摊位开始……</div>
+   <div class="lbl"><del>FIG. 02 — VOL.03</del></div><div style="height:3em;background:#eee;margin:.3em 0"></div><div class="sm">门店照片</div>
+   <ins>全页没有一处写着“见图 2”。删掉。</ins></div>`,
+ notes:['不会被引用的编号，就不要编']},
+
+{c:'type',t:'千篇一律的层级',
+ see:'全站只有三种字：粗黑大标题、灰色细说明、小号大写标签。每一块都重复这一套。',
+ why:'每一块都是“大标题 + 灰说明”，读者扫两眼就摸到规律，从此只看标题、跳过说明，可关键信息往往写在说明里。',
+ fix:'让层级跟着内容走：有的地方一句粗体就够，有的地方需要一张表，有的标题可以跟正文一样大。',
+ bad:st(`<div class="ph" style="padding:1em 1.6em;gap:.8em">${['FEATURE','PRICING','SUPPORT'].map(x=>`<div><div style="font-size:.55em;letter-spacing:.2em;color:#999">${x}</div><div style="font-weight:900;font-size:1.05em">${x=='PRICING'?'灵活的定价方案':x=='FEATURE'?'强大的核心功能':'全天候贴心服务'}</div><div style="font-size:.68em;color:#aaa">${x=='PRICING'?'基础版免费，多店铺每月 12 元，按年付 8 折':'为您提供卓越的使用体验与价值'}</div></div>`).join('')}</div>`
+   +rg(1,42,62,24)+mk(1,64,46)),
+ notes:['价格藏在第二块的灰色小字里，排法跟另外两段空话一模一样'],
+ good:st(`<div class="ph lz" style="padding:1em 1.6em;gap:.6em;font-size:.88em"><b style="font-size:1.1em">价格</b>
+   <div style="display:grid;grid-template-columns:1fr auto;row-gap:.2em"><span>一个摊位</span><b>免费</b><span>多个店铺</span><b>¥12 / 月</b><span style="color:#5c5c62;font-size:.85em">按年付</span><span style="color:#5c5c62;font-size:.85em">¥115 / 年</span></div>
+   <div style="font-size:.78em;color:#5c5c62;margin-top:.4em">客服：每天 10:00 到凌晨 2:00，摊主收摊的时候也有人回。</div></div>`),
+ gnote:'价格做成一张小表；客服只写一句，但写清了几点到几点。'},
+
+{c:'type',t:'放之四海皆准的口号',
+ see:'赋能、连接、重新定义、无限可能、下一代——放在任何公司的首页都说得通。',
+ why:'一句话放谁家都成立，说明它什么也没说。',
+ fix:'写一句竞争对手没法照抄的话：有对象、有数字、有结果。写完把公司名换成竞品读一遍，还说得通就重写。',
+ bad:`<div class="proof"><b style="font-size:1.35em"><del>赋能未来，探索无限可能</del></b><ins>收摊的时候，账已经记完了。</ins>
+   <div class="sm"><del>以 AI 重新定义财务管理，助力每一位创业者成就梦想</del></div><ins style="font-size:.7em">扫码收的钱自动入账，现金说一句话就记上。3 万个摊主在用。</ins></div>`,
+ notes:['换成竞品的名字读一遍：原句照样成立，改后的不成立']},
+
+{c:'type',t:'冒出来的人生格言',
+ see:'表单角落或页面底部冒出一句“保持好奇，持续前行”“每一次记录都是成长的足迹”。',
+ why:'没有人在填表的时候需要一句人生哲理。它占了注意力，却不回答任何问题。',
+ fix:'换成那个位置上用户真正需要的那句话：“已自动保存”“这一项可以以后再填”。',
+ bad:`<div class="proof"><div class="sm">金额</div><div style="border-bottom:1px solid #999;padding:.2em 0;margin-bottom:.6em">38</div>
+   <div class="sm">备注</div><div style="border-bottom:1px solid #999;padding:.2em 0;color:#aaa">选填</div>
+   <div class="sm" style="margin-top:.9em;font-style:italic"><del>✦ 每一笔记录，都是成长的足迹</del></div><ins style="font-size:.75em">备注可以不填。已自动保存，2 分钟前。</ins></div>`,
+ notes:['用户在这里只关心：要不要填，填了有没有存上']},
+
+{c:'type',t:'假装专业的标签',
+ see:'GROWTH STUDY、CASE N°3、INSIGHT LAB 这种英文小标签，挂在普通内容上。',
+ why:'用陌生词营造专业感，读者只会觉得被隔在门外。',
+ fix:'用用户自己的说法。“案例研究”不如“张姐的烧烤摊用了三个月”。',
+ bad:`<div class="proof"><div class="lbl"><del>GROWTH STUDY · CASE N°3</del></div><ins>用户故事</ins>
+   <b><del>赋能小微商户实现数字化转型的实践</del></b><ins>张姐的烧烤摊用了三个月：月底不用再熬夜对账</ins></div>`,
+ notes:['英文标签和长标题都换成摊主自己会说的话']},
+
+{c:'type',t:'假装是信息的碎字',
+ see:'角落里一行日期“2026.04”，一个坐标“N 31°14′”，一句诗，一个“EST. 2024”。',
+ why:'这些字长得像信息，其实不是。读者会停下来试着理解，然后发现白读了。',
+ fix:'每一行字都问一句：读者读了它，会有什么不同的做法？答案是“没有”，就删掉。',
+ bad:st(`<div class="ph" style="padding:1.2em 1.6em;background:#f7f5f0">
+   <div style="display:flex;justify-content:space-between;font-size:.55em;letter-spacing:.18em;color:#999"><span>N 31°14′ E 121°29′</span><span>EST. 2024</span><span>VOL.02 / 2026.04</span></div>
+   <div style="margin:auto 0;font-size:1.5em;font-weight:300;line-height:1.3">记录<br>每一个当下</div>
+   <div style="display:flex;justify-content:space-between;font-size:.55em;color:#999;letter-spacing:.1em"><span>— 生活明朗，万物可爱</span><span>NO.003</span></div></div>`
+   +rg(0,2,100,16)+rg(0,84,100,16)+mk(1,90,24)),
+ notes:['画面四角七处“看似信息”，没有一处能用']},
+
+{c:'type',t:'默认字体，默认参数',
+ see:'全站系统默认黑体，字号 16 / 14 / 12 三档，行高统一 1.5。',
+ why:'挑不出错，也挑不出任何特点，读起来像手机的设置页。',
+ fix:'字体不必花哨，但要挑过：标题可以用一款有性格的字，正文选适合长时间阅读的。字号和行高用真实内容试出来。',
+ bad:st(`<div class="ph" style="padding:1.4em 1.8em;font-family:Arial,sans-serif;line-height:1.5"><div style="font-size:1em;font-weight:700">关于落账</div><div style="font-size:.85em;margin-top:.3em">落账是一款记账应用。我们致力于为用户提供简单好用的记账体验。</div><div style="font-size:.7em;color:#888;margin-top:.3em">更新于 2026-10-01</div></div>`
+   +mk(1,90,8)),
+ notes:['三种字号挨得太近，看不出谁是标题'],
+ good:st(`<div class="ph lz" style="padding:1.4em 1.8em"><div style="font-family:var(--serif);font-size:1.6em;font-weight:900;line-height:1.25">我们为什么<br>做落账</div><div style="font-size:.82em;line-height:1.8;margin-top:.6em;color:#333">2019 年，我们中的一个人在夜市卖了一年烤冷面。那一年最累的不是出摊，是每天凌晨对着三个收款码对账。</div></div>`),
+ gnote:'标题换成宋体，加大一倍。正文行高放宽，写的是一件真事。'},
+
+{c:'type',t:'字体混搭',
+ see:'标题用衬线体，正文黑体，数字用等宽“科技体”，按钮用手写体，引言再来一个楷体。',
+ why:'每换一种字体，读者就觉得换了一个人在说话。',
+ fix:'一页最多两种字体：一种给标题，一种给正文。数字用正文字体的等宽数字就行。',
+ bad:st(`<div class="ph" style="padding:1.2em 1.6em;gap:.4em">
+   <div style="font-family:Georgia,serif;font-size:1.4em;font-style:italic">Smart Ledger</div>
+   <div style="font-family:'Courier New',monospace;font-size:1.3em;color:#4f46e5">¥ 2,318.00</div>
+   <div style="font-family:var(--hand);font-size:.9em">“记账，是对生活的温柔。”</div>
+   <div style="font-family:Impact,sans-serif;font-size:.9em;letter-spacing:.05em">TODAY'S INCOME</div>
+   <span class="pill" style="align-self:flex-start;border:1px solid #333;font-family:'Comic Sans MS',cursive;font-size:.8em">Let's go!</span></div>`
+   +mk(1,80,8)),
+ notes:['五行字，五种字体']},
+
+{c:'type',t:'间距没有道理',
+ see:'标题离上一段很远，离自己的正文也很远，正文段落之间却挤成一团。',
+ why:'间距表示关系：靠得近的是一组，离得远的是两组。标题离正文太远，看起来就不像是它的标题。',
+ fix:'标题离下文近、离上文远。段落之间的空隙要大于行距，又要小于区块之间的空隙。',
+ bad:st(`<div class="ph" style="padding:1em 1.8em;font-size:.82em">${L(90)}${L(60)}<div style="height:2.4em"></div><b style="font-size:1.2em">怎么导出账单</b><div style="height:2.4em"></div><div style="line-height:1.3">进入“报表”，选择月份。<br>点击“导出”，选择 Excel。<br>文件会发到你的微信。</div></div>
+   <i style="position:absolute;left:4%;top:29%;height:16%;border-left:.15em solid #c4231a"></i><i style="position:absolute;left:4%;top:56%;height:16%;border-left:.15em solid #c4231a"></i>`
+   +mk(1,70,48)),
+ notes:['标题上下的空隙一样大，看不出它属于哪一段'],
+ good:st(`<div class="ph lz" style="padding:1em 1.8em;font-size:.82em">${L(90)}${L(60)}<div style="height:3em"></div><b style="font-size:1.2em">怎么导出账单</b><div style="line-height:1.8;margin-top:.4em">进入“报表”，选择月份。<br>点击“导出”，选择 Excel。<br>文件会发到你的微信。</div></div>`),
+ gnote:'标题上方空三行，下方空半行。'},
+
+{c:'type',t:'行高和字距乱调',
+ see:'大标题行高 1.0，字挤成一团；正文行高 2.2，读完一行找不到下一行；英文全大写又加了 0.3em 的字距。',
+ why:'默认参数是为某种语言、某个字号调出来的。中文正文比英文需要更大的行高，大标题需要更小的行高，一套数值用不到底。',
+ fix:'中文正文行高 1.7 到 1.9，大标题 1.2 到 1.3，中文正文不加字距。每一处都拿真实的文字来试，不要用占位文本。',
+ bad:st(`<div class="ph" style="padding:1em 1.8em"><div style="font-size:1.7em;font-weight:900;line-height:.95">收摊前看一眼<br>今天赚了多少</div>
+   <div style="font-size:.72em;line-height:2.5;margin-top:.6em;color:#555">今天收了多少、花了多少、赚了多少，打开就能看到，不需要再一笔一笔地加。</div>
+   <div style="font-size:.6em;letter-spacing:.4em;margin-top:.4em">DAILY SUMMARY</div></div>`
+   +mk(1,62,8)+mk(2,90,48)),
+ notes:['标题两行几乎碰在一起','正文两行之间能再塞一行'],
+ good:st(`<div class="ph lz" style="padding:1em 1.8em"><div style="font-size:1.7em;font-weight:900;line-height:1.25">收摊前看一眼<br>今天赚了多少</div>
+   <div style="font-size:.78em;line-height:1.8;margin-top:.6em;color:#333">今天收了多少、花了多少、赚了多少，打开就能看到，不需要再一笔一笔地加。</div></div>`)},
+
+{c:'type',t:'层级太多',
+ see:'一块内容上叠着眉题、标题、副标题、标签、说明、脚注，一共六层。',
+ why:'人一眼只分得清三四个层级。再多，就看不出谁大谁小了。',
+ fix:'先删到只剩标题和正文，再看需不需要加回一层。',
+ bad:`<div class="proof"><div class="lbl"><del>CORE FEATURE</del></div><b style="font-size:1.3em">每日小结</b><div class="sm" style="font-size:.85em"><del>你的私人财务助理</del></div>
+   <div><del style="font-size:.6em;background:#eef;padding:0 .4em">AI 驱动</del> <del style="font-size:.6em;background:#eef;padding:0 .4em">实时</del></div>
+   <div class="sm" style="margin-top:.3em">每晚 10 点把当天的收入、支出和利润发到微信。</div><div style="font-size:.55em;color:#aaa"><del>* 以实际体验为准</del></div>
+   <ins>六层删到两层：标题和一句话。</ins></div>`,
+ notes:['眉题、副标题、两个标签、脚注，都不带新信息']},
+
+{c:'type',t:'整段文字居中',
+ see:'三四行以上的段落也居中排，每一行的开头都在不同位置。',
+ why:'读完一行，眼睛要回到下一行的开头。居中时每行开头都不一样，读起来很累。',
+ fix:'两行以内的标题可以居中，超过两行一律左对齐。',
+ bad:st(`<div class="ph" style="padding:1.2em 2.4em;text-align:center;font-size:.78em;line-height:1.75;justify-content:center"><b style="font-size:1.3em">退换说明</b><p style="margin:.5em 0 0">收到会员卡后 7 天内可以申请退款。<br>已经使用过导出功能的，<br>按使用天数扣除费用，剩余部分原路退回，<br>到账时间一般是 3 到 7 个工作日。</p></div>`
+   +`<i style="position:absolute;left:24%;top:43%;width:.5em;height:.5em;background:#c4231a;border-radius:50%"></i><i style="position:absolute;left:35%;top:53%;width:.5em;height:.5em;background:#c4231a;border-radius:50%"></i><i style="position:absolute;left:21%;top:63%;width:.5em;height:.5em;background:#c4231a;border-radius:50%"></i><i style="position:absolute;left:27%;top:73%;width:.5em;height:.5em;background:#c4231a;border-radius:50%"></i>`
+   +mk(1,86,40)),
+ notes:['四行字，四个起点（红点）'],
+ good:st(`<div class="ph lz" style="padding:1.2em 2.4em;font-size:.78em;line-height:1.75;justify-content:center"><b style="font-size:1.3em">退换说明</b><p style="margin:.5em 0 0">收到会员卡后 7 天内可以申请退款。已经使用过导出功能的，按使用天数扣除费用，剩余部分原路退回，一般 3 到 7 个工作日到账。</p></div>`)},
+
+{c:'type',t:'功能名起得太玄',
+ see:'菜单叫“成长空间”“发现未来”“灵感中心”，点进去才知道是报表和设置。',
+ why:'导航是给人找东西用的。名字需要猜，就等于迷路。',
+ fix:'用用户自己会搜的词：报表、账单、设置。可以做个小测试：只给菜单名，请人猜里面是什么。',
+ bad:`<div class="proof" style="display:grid;grid-template-columns:auto 1fr;column-gap:1.4em;align-items:baseline">
+   <del>成长空间</del><ins style="margin:0">报表</ins><del>发现未来</del><ins style="margin:0">新功能</ins><del>灵感中心</del><ins style="margin:0">帮助</ins><del>我的宇宙</del><ins style="margin:0">设置</ins></div>`,
+ notes:['四个名字，一个都猜不出']},
+
+/* ———————— 五 图像 ———————— */
+{c:'image',t:'一眼看出是生成的插画',
+ see:'光滑的塑料质感小人、漂浮的 3D 球、紫色光照下的抽象城市；仔细看，手指数量不太对。',
+ why:'读者一眼认出是生成图，会顺手怀疑页面上其他内容也是随手生成的。',
+ fix:'用真实照片、真实截图，或者请插画师画一整套。没有预算，就不放插图，放截图。',
+ bad:st(`<div class="ph" style="background:linear-gradient(180deg,#ede9fe,#fbcfe8);align-items:center;justify-content:flex-end">
+   <div style="position:absolute;width:18%;aspect-ratio:1;border-radius:50%;left:20%;top:12%;background:radial-gradient(circle at 30% 30%,#fff,#a78bfa)"></div>
+   <div style="position:absolute;width:10%;aspect-ratio:1;border-radius:50%;right:18%;top:22%;background:radial-gradient(circle at 30% 30%,#fff,#f472b6)"></div>
+   <div style="width:16%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fde4cf,#f4a37b)"></div>
+   <div style="width:34%;height:38%;border-radius:45% 45% 0 0;background:radial-gradient(circle at 40% 25%,#c4b5fd,#7c3aed);margin-top:-.4em"></div>
+   <div style="position:absolute;left:58%;top:52%;display:flex;gap:.15em">${[0,1,2,3,4,5].map(()=>`<i style="width:.35em;height:1.4em;border-radius:1em;background:#f4a37b"></i>`).join('')}</div></div>`
+   +rg(55,46,16,24)+mk(1,4,4)+mk(2,72,46)),
+ notes:['没有来源，没有细节，哪个产品都能用','数一下手指']},
+
+{c:'image',t:'用概念图代替真东西',
+ see:'首屏放一张“数据在流动”的抽象图，而不是产品截图。',
+ why:'用户想知道产品长什么样。一张抽象图告诉他的是：我们不想给你看。',
+ fix:'放真实的界面截图，哪怕不完美。有真实用户的成果（作品、照片、数据），优先放那个。',
+ bad:st(`<div class="ph" style="background:#0b1020">
+   <svg viewBox="0 0 160 100" style="position:absolute;inset:0;width:100%;height:100%">${Array.from({length:14},(_,i)=>`<path d="M-10 ${20+i*5} C 40 ${i*7}, 90 ${100-i*6}, 170 ${30+i*3}" stroke="hsl(${200+i*8},90%,${55+i}%)" stroke-width=".5" fill="none" opacity=".8"/>`).join('')}</svg>
+   <div style="position:absolute;left:6%;top:10%;color:#fff;font-weight:900;font-size:1.2em">数据驱动增长</div></div>`
+   +mk(1,86,60)),
+ notes:['看完还是不知道这个产品的界面长什么样'],
+ good:st(`<div class="ph lz" style="background:#f3f3f1;flex-direction:row;align-items:flex-end;justify-content:center;gap:5%;padding-top:1em">
+   ${[['今天','¥2,318',['微信 1,206','支付宝 742','现金 370']],['本月','¥41,086',['最好的一天 10/3','卖得最多 烤串','进货 ¥12,410']]].map(([a,b,rows])=>`<div style="width:30%;height:92%;background:#fff;border:.25em solid #222;border-bottom:0;border-radius:1em 1em 0 0;padding:.6em .7em;font-size:.6em"><div style="height:.35em;background:#1e5b45;margin:-.6em -.7em .5em"></div><div style="color:#5c5c62">${a}</div><b style="font-size:1.8em">${b}</b>${rows.map(r=>`<div class="row"><span>${r.split(' ')[0]}</span><span>${r.split(' ')[1]}</span></div>`).join('')}</div>`).join('')}</div>`),
+ gnote:'两张真实界面：今天和本月。'},
+
+{c:'image',t:'图片风格大杂烩',
+ see:'同一页里有实拍照片、扁平卡通、3D 渲染、线条图标，还有一张水彩。',
+ why:'每种画风都在讲一个不同的故事。放在一起，像几份宣传册各剪了一页拼起来的。',
+ fix:'定一种影像语言：全部用实拍，或者全部出自同一位插画师。不得已要混用，至少统一色调和裁切方式。',
+ bad:st(`<div class="ph" style="flex-direction:row;padding:1.4em;gap:1em;align-items:center">
+   <div style="flex:1;aspect-ratio:3/4;background:linear-gradient(160deg,#6b7280,#d6c7a1 60%,#3f3f46)"></div>
+   <div style="flex:1;aspect-ratio:3/4;background:#fde047;border-radius:1em;display:grid;place-items:center"><div style="width:50%;aspect-ratio:1;border-radius:50%;background:#fb923c;border:.2em solid #000"></div></div>
+   <div style="flex:1;aspect-ratio:3/4;display:grid;place-items:center;background:#eef"><div style="width:60%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#6366f1 60%,#1e1b4b)"></div></div>
+   <div style="flex:1;aspect-ratio:3/4;display:grid;place-items:center;border:1px solid #ddd"><svg viewBox="0 0 24 24" style="width:50%" fill="none" stroke="#333" stroke-width="1.2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div></div>`
+   +mk(1,4,8)+mk(2,28,8)+mk(3,52,8)+mk(4,76,8)),
+ notes:['照片','卡通','3D','线条图标：四种画风，讲的是四个团队成员']},
+
+{c:'image',t:'比喻用过了头',
+ see:'用星球表示数据，用生命树表示成长，用轨道表示流程。',
+ why:'读者得先把比喻翻译回来，才能开始理解产品。多数人懒得翻译。',
+ fix:'直接画东西本身：流程就画流程图，数据就画图表。比喻只在它让事情更好懂的时候才用。',
+ bad:st(`<div class="ph" style="background:#0b0b1a;color:#fff">
+   <svg viewBox="0 0 160 100" style="position:absolute;inset:0;width:100%;height:100%"><ellipse cx="80" cy="55" rx="60" ry="22" fill="none" stroke="#6366f1" stroke-width=".5"/><ellipse cx="80" cy="55" rx="38" ry="14" fill="none" stroke="#a855f7" stroke-width=".5"/><circle cx="80" cy="55" r="9" fill="#8b5cf6"/><circle cx="140" cy="55" r="3" fill="#22d3ee"/><circle cx="50" cy="44" r="2.5" fill="#f472b6"/><circle cx="104" cy="67" r="2" fill="#fde047"/></svg>
+   <div style="position:absolute;left:6%;top:8%;font-size:.7em;opacity:.7">你的财务宇宙</div>
+   <div style="position:absolute;right:6%;top:46%;font-size:.6em;opacity:.7">收入星</div></div>`
+   +mk(1,86,64)),
+ notes:['“收入星”绕着什么转？转得快是好还是不好？没人知道'],
+ good:st(`<div class="ph lz" style="padding:1em 1.6em"><b style="font-size:.85em">十月，每天的收入</b>
+   <svg viewBox="0 0 160 70" style="width:100%;flex:1;margin-top:.4em">${[31,28,41,25,30,35,48,27,26,33,29,37,44,30].map((v,i)=>`<rect x="${4+i*11}" y="${62-v}" width="7" height="${v}" fill="${i==6?'#1e5b45':'#9ab8ab'}"/>`).join('')}<path d="M2 62 H158" stroke="#888" stroke-width=".4"/><text x="70" y="10" font-size="5" fill="#1e5b45">周六 ¥4,106</text></svg></div>`),
+ gnote:'一张柱状图。哪天最好，一眼看到。'},
+
+/* ———————— 六 动效与流程 ———————— */
+{c:'flow',t:'悬停就放大上浮',
+ see:'鼠标经过卡片，卡片放大一圈、往上浮、阴影加深。',
+ why:'本意是提示“这里能点”，可页面上每张卡都这样跳，鼠标随便扫过就满屏晃动。手机上根本没有悬停。',
+ fix:'用小而明确的反馈：颜色变一下，或者出现下划线。能点的东西，在不悬停的时候就应该看得出来能点。',
+ bad:st(`<div class="ph" style="padding:1.6em;gap:1em;flex-direction:row;align-items:center;background:#f6f6fb">${['基础版','专业版','企业版'].map(x=>`<div class="hov-bad" style="flex:1;background:#fff;border-radius:.8em;padding:1em;text-align:center;cursor:pointer"><b>${x}</b>${L(80)}${L(60)}</div>`).join('')}</div>
+   <div style="position:absolute;bottom:.6em;left:0;right:0;text-align:center;font-size:.7em;color:#888">把鼠标移到卡片上试试</div>`
+   +mk(1,4,6)),
+ notes:['三张卡都会跳。分不清哪张是推荐的，也分不清哪张能点'],
+ good:st(`<div class="ph lz" style="padding:1.4em 1.8em;font-size:.88em">${[['一个摊位','免费'],['多个店铺','¥12 / 月'],['连锁门店','联系我们']].map(([a,b])=>`<a class="hov-good" style="display:flex;justify-content:space-between;padding:.6em 0;border-bottom:1px solid #e3e3e3;cursor:pointer;color:inherit;text-decoration:none"><span class="t">${a} →</span><b>${b}</b></a>`).join('')}
+   <div style="text-align:center;font-size:.8em;color:#888;margin-top:1em">移上来：只有文字变色、加下划线</div></div>`)},
+
+{c:'flow',t:'滚动才淡入',
+ see:'每个区块都要滚到眼前才开始淡入、上滑，有的还要再等零点几秒。',
+ why:'读者滚得比动画快，看到的是一片空白在等。截图、分享预览里也常常一片空白。',
+ fix:'内容直接显示。动效只用来解释变化：展开、移动、排序。',
+ bad:st(`<div class="ph" style="padding:1em 1.6em;gap:.8em">
+   <div>${L(40,'dk')}${L(90)}</div>
+   <div class="anim" style="border:1px dashed #bbb;flex:1;display:grid;place-items:center;font-size:.75em;color:#999">（正在淡入……）</div>
+   <div class="anim" style="border:1px dashed #bbb;flex:1;display:grid;place-items:center;font-size:.75em;color:#999;animation-delay:.6s">（再等一下……）</div></div>`
+   +mk(1,86,40)),
+ notes:['读者已经滚到这里了，内容还没出来']},
+
+{c:'flow',t:'先定风格，后看需求',
+ see:'先拍板“暗黑科技风”，然后记账、点餐、报名表通通塞进去。',
+ why:'风格应该从内容和使用场景里长出来。先定风格，等于让内容去迁就包装。',
+ fix:'先列出用户在这一页要完成的事、要看的信息，排出黑白线框，最后再定风格。',
+ bad:st(`<div class="ph" style="background:#05060a;color:#e0e7ff;padding:1.2em 1.6em;gap:.6em;font-family:'Courier New',monospace">
+   <div style="color:#22d3ee;font-size:.7em;letter-spacing:.2em">// LEDGER.SYS v2.0</div>
+   <div style="font-size:1.6em;font-weight:700;text-shadow:0 0 .4em #22d3ee">¥2,318.00</div>
+   <div style="font-size:.7em;color:#64748b">&gt; INCOME_STREAM: ACTIVE</div>
+   <div style="display:flex;gap:.5em;margin-top:auto"><span style="border:1px solid #22d3ee;color:#22d3ee;padding:.3em .8em;font-size:.75em;box-shadow:0 0 .6em #22d3ee">[ 记 账 ]</span></div></div>`
+   +mk(1,86,10)),
+ notes:['用户是晚上十点在路灯下收摊的烧烤摊主'],
+ good:st(`<div class="ph lz">${lzHead()}<div style="padding:.6em 1.4em"><div style="font-size:.8em;color:#5c5c62">今天收了</div><div style="font-size:2.4em;font-weight:900" class="num">¥2,318</div>
+   <div style="font-size:.78em;color:#5c5c62">白底、大字、高对比：路灯下、手上有油也看得清、点得准。</div><div style="margin-top:.8em"><span class="btn" style="font-size:1em;padding:.6em 1.6em">记一笔</span></div></div></div>`),
+ gnote:'风格是从使用场景推出来的：晚上、户外、单手、手上有油。'},
+
+{c:'flow',t:'同一个按钮重复四遍',
+ see:'“立即体验”“免费试用”“开始探索”“马上注册”，一屏里四个，点进去都是同一个页面。',
+ why:'四个按钮说的是同一件事，却让人以为有四个选项，反而犹豫。',
+ fix:'每一屏只放一个主要按钮，按钮上写清点了会发生什么，比如“免费下载，不用绑卡”。',
+ bad:st(`<div class="ph" style="padding:1em 1.6em;gap:.8em">
+   <div style="display:flex;justify-content:space-between;align-items:center"><b>◆ Ledger</b><span class="pill" style="background:#4f46e5;color:#fff;font-size:.72em">免费试用</span></div>
+   <div style="font-weight:900;font-size:1.3em;margin-top:.4em">智能记账新体验</div>
+   <div style="display:flex;gap:.6em"><span class="pill" style="background:#4f46e5;color:#fff;font-size:.78em">立即体验</span><span class="pill" style="border:1px solid #4f46e5;color:#4f46e5;font-size:.78em">开始探索</span></div>
+   <div style="margin-top:auto;background:#eef;padding:.6em 1em;display:flex;justify-content:space-between;align-items:center;border-radius:.6em;font-size:.8em"><span>还在犹豫？</span><span class="pill" style="background:#4f46e5;color:#fff">马上注册</span></div></div>`
+   +mk(1,70,4)+mk(2,22,42)+mk(3,44,42)+mk(4,62,76)),
+ notes:['“免费试用”','“立即体验”','“开始探索”','“马上注册”。四个按钮，点进去是同一个注册页'],
+ good:st(`<div class="ph lz" style="padding:1em 1.6em;gap:.6em">
+   <div style="display:flex;justify-content:space-between;font-size:.8em"><b>落账</b><span style="color:#2456a6">登录</span></div>
+   <div style="font-weight:900;font-size:1.3em;margin-top:.4em">收摊的时候，账已经记完了。</div>
+   <div><span class="btn" style="font-size:.95em">免费下载</span></div><div style="font-size:.72em;color:#5c5c62">安卓 / iPhone · 不用绑卡 · 不用营业执照</div></div>`),
+ gnote:'一个按钮，旁边一行字把“要不要钱”“麻不麻烦”先答了。'},
+
+{c:'flow',t:'空状态过度装饰',
+ see:'还没有数据的页面，中间一张大插画，一句“这里空空如也～开启你的第一步吧！”，下面三个按钮。',
+ why:'第一次打开的用户最需要知道下一步做什么。插画和语气词都不回答这个问题，三个按钮又让人不知道该点哪个。',
+ fix:'一句话说明为什么是空的，一个按钮去做那件事。可以附一个示例，让人知道填进去之后是什么样。',
+ bad:st(`<div class="ph" style="align-items:center;justify-content:center;gap:.5em;text-align:center">
+   <div style="width:24%;aspect-ratio:1.3;border-radius:40%;background:radial-gradient(circle at 40% 35%,#fde68a,#fb923c 55%,#f472b6)"></div>
+   <div style="font-weight:700;font-size:.95em">这里空空如也～</div><div style="font-size:.7em;color:#999">开启你的第一步吧！✨</div>
+   <div style="display:flex;gap:.4em"><span class="pill" style="background:#4f46e5;color:#fff;font-size:.7em">开始</span><span class="pill" style="border:1px solid #4f46e5;color:#4f46e5;font-size:.7em">探索</span><span class="pill" style="border:1px solid #ccc;color:#666;font-size:.7em">了解更多</span></div></div>`
+   +mk(1,62,8)+mk(2,74,76)),
+ notes:['插画占了一半，没说明为什么是空的','三个按钮，不知道该点哪个'],
+ good:st(`<div class="ph lz">${lzHead('今天')}<div style="padding:.8em 1.4em">
+   <div style="font-size:.95em"><b>今天还没记账。</b></div><div style="font-size:.78em;color:#5c5c62;margin:.2em 0 .7em">绑定收款码之后，扫码收的钱会自动出现在这里。</div>
+   <span class="btn">绑定收款码</span><span style="font-size:.78em;color:#2456a6;margin-left:1em">先手动记一笔</span>
+   <div style="margin-top:1em;font-size:.72em;color:#9a9aa0;border-top:1px dashed #ccc;padding-top:.5em">示例　21:14 微信 烤串 <span style="float:right">¥38</span></div></div></div>`),
+ gnote:'说清为什么是空的，给一个主要操作和一个备选，再附一行示例账目。'}
+];
+
+
+/* ———— 准备 ———— */
+const pad=n=>String(n).padStart(2,'0');
+const byCat={};CATS.forEach(c=>byCat[c.k]=[]);E.forEach(e=>byCat[e.c].push(e));
+const ORDER=[];let num=0;CATS.forEach(c=>byCat[c.k].forEach(e=>{e.n=++num;ORDER.push(e);}));
+const CAT=Object.fromEntries(CATS.map(c=>[c.k,c]));
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ORDER.forEach(e=>{e.hay=[e.t,e.see,e.why,e.fix,(e.notes||[]).join(' '),e.gnote||'',CAT[e.c].t,String(e.n),pad(e.n)].join(' ').toLowerCase();});
+
+const KEY='ai-atlas-proof-v1';
+let marked=new Set();
+try{const s=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(s))marked=new Set(s.filter(v=>Number.isInteger(v)&&v>=1&&v<=50));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify([...marked]));}catch(e){}};
+const state={cat:'all',q:'',mine:false};
+
+/* ———— 索引海图 ———— */
+(function drawMap(){
+  const svg=$('map');let out='';let ci=0;
+  CATS.forEach((c,k)=>{
+    const items=byCat[c.k];
+    const pts=items.map((e,i)=>{const r=15.5*Math.sqrt(i+.5),a=i*2.39996+k;return [c.cx+r*Math.cos(a),c.cy+r*Math.sin(a)*.9];});
+    const maxR=Math.max(...pts.map(([x,y])=>Math.hypot(x-c.cx,y-c.cy)))+14;
+    let g=`<g class="region" data-cat="${c.k}">`;
+    [0,1,2,3].forEach(j=>{
+      const R=maxR+j*13;let d='';
+      for(let t=0;t<=96;t++){const th=t/96*Math.PI*2;const rr=R*(1+.09*Math.sin(3*th+k*1.7+j*.4)+.05*Math.sin(5*th+k));d+=(t?'L':'M')+(c.cx+rr*Math.cos(th)).toFixed(1)+' '+(c.cy+rr*Math.sin(th)*.82).toFixed(1);}
+      g+=`<path class="contour c${j}" pathLength="1" d="${d}Z" style="animation-delay:${(ci++*90)}ms"/>`;
+    });
+    const ly=c.cy-(maxR+3*13)*.82-6;
+    g+=`<text x="${c.cx}" y="${Math.max(14,ly)}" text-anchor="middle">${c.n}　${c.t}</text>`;
+    pts.forEach(([x,y],i)=>{const e=items[i];g+=`<g class="pin" data-n="${e.n}" tabindex="0" role="button" aria-label="${pad(e.n)} ${esc(e.t)}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8"/><text x="${x.toFixed(1)}" y="${(y+.5).toFixed(1)}">${e.n}</text></g>`;});
+    out+=g+'</g>';
+  });
+  svg.innerHTML=out;
+  const tip=$('tip'),chart=$('chart');
+  const showTip=pin=>{const e=ORDER[pin.dataset.n-1];const c=pin.querySelector('circle');const r=chart.getBoundingClientRect(),b=c.getBoundingClientRect();
+    tip.innerHTML=`<span class="num">${pad(e.n)}</span>${esc(e.t)}`;tip.style.left=(b.left+b.width/2-r.left)+'px';tip.style.top=(b.top-r.top)+'px';tip.style.opacity=1;};
+  svg.addEventListener('pointerover',ev=>{const p=ev.target.closest('.pin');if(p)showTip(p);});
+  svg.addEventListener('pointerout',ev=>{if(ev.target.closest('.pin'))tip.style.opacity=0;});
+  svg.addEventListener('focusin',ev=>{const p=ev.target.closest('.pin');if(p)showTip(p);});
+  svg.addEventListener('focusout',()=>tip.style.opacity=0);
+  svg.addEventListener('click',ev=>{const p=ev.target.closest('.pin');if(p)openEntry(+p.dataset.n);});
+  svg.addEventListener('keydown',ev=>{const p=ev.target.closest('.pin');if(p&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();openEntry(+p.dataset.n);}});
+})();
+
+/* ———— 画廊 ———— */
+const arrow='<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+$('grid').innerHTML=ORDER.map(e=>`<article class="card" id="c${e.n}" data-n="${e.n}">
+  <button class="plate" type="button" tabindex="-1" aria-hidden="true">${e.bad}</button>
+  <div class="cmeta"><h3><a href="#n${pad(e.n)}" data-open="${e.n}"><span class="num">${pad(e.n)}</span><span class="t">${esc(e.t)}</span></a></h3>
+  <span class="sub">${CAT[e.c].t}${e.good?' · 附改后示意':''}<span class="mine-tag"></span></span>
+  <button class="go" type="button" data-open="${e.n}" aria-label="打开 ${pad(e.n)} ${esc(e.t)}">${arrow}</button></div></article>`).join('');
+$('grid').addEventListener('click',ev=>{
+  const a=ev.target.closest('[data-open]');const card=ev.target.closest('.card');
+  if(a){ev.preventDefault();openEntry(+a.dataset.open);return;}
+  if(card&&ev.target.closest('.plate'))openEntry(+card.dataset.n);
+});
+
+const tabs=$('tabs');
+tabs.insertAdjacentHTML('beforeend',[{k:'all',t:'全部'}].concat(CATS).map(c=>`<button type="button" role="tab" data-cat="${c.k}" aria-selected="${c.k==='all'}">${c.t}<span class="num">${c.k==='all'?50:byCat[c.k].length}</span></button>`).join(''));
+function moveInd(){const b=tabs.querySelector('[aria-selected="true"]');const ind=$('ind');ind.style.setProperty('--x',b.offsetLeft+'px');ind.style.setProperty('--w',b.offsetWidth+'px');}
+tabs.addEventListener('click',ev=>{const b=ev.target.closest('button[data-cat]');if(!b)return;
+  tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b));state.cat=b.dataset.cat;moveInd();b.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});apply(true);});
+window.addEventListener('resize',moveInd);
+$('onlyMine').addEventListener('change',ev=>{state.mine=ev.target.checked;apply(true);});
+
+function hl(text,terms){
+  if(!terms.length)return esc(text);
+  const re=new RegExp('('+terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  return String(text).split(re).map((p,i)=>i%2?'<mark>'+esc(p)+'</mark>':esc(p)).join('');
+}
+const terms=()=>state.q.toLowerCase().split(/\s+/).filter(Boolean);
+const matches=e=>(state.cat==='all'||e.c===state.cat)&&(!state.mine||marked.has(e.n))&&terms().every(t=>e.hay.includes(t));
+function visible(){return ORDER.filter(matches);}
+function apply(animate){
+  const ts=terms();let i=0;
+  ORDER.forEach(e=>{
+    const card=$('c'+e.n),ok=matches(e);
+    card.hidden=!ok;
+    card.querySelector('.t').innerHTML=hl(e.t,ts);
+    card.querySelector('.mine-tag').textContent=marked.has(e.n)?'✓ 我的网站有':'';
+    if(ok&&animate){card.classList.remove('in');void card.offsetWidth;card.style.setProperty('--ci',Math.min(i,16));card.classList.add('in');}
+    if(ok)i++;
+    const pin=document.querySelector(`.pin[data-n="${e.n}"]`);pin.classList.toggle('hide',!ok);pin.classList.toggle('on',marked.has(e.n));
+  });
+  document.querySelectorAll('.region').forEach(g=>g.classList.toggle('dim',state.cat!=='all'&&g.dataset.cat!==state.cat));
+  $('shown').textContent=i;
+  $('qInfo').textContent=ts.length?(i?'找到 '+i+' 条':'没有结果'):'';
+  const em=$('empty');
+  if(!i){em.hidden=false;em.innerHTML=state.mine&&!marked.size?'你还没有勾选任何条目。打开一条，在文字下方勾选“我的网站也有这个”。':`没有找到符合条件的条目。<button type="button" id="resetAll">清空搜索和筛选</button>`;
+    const r=$('resetAll');if(r)r.onclick=resetAll;}
+  else em.hidden=true;
+}
+function resetAll(){state.q='';$('q').value='';state.mine=false;$('onlyMine').checked=false;state.cat='all';tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x.dataset.cat==='all'));moveInd();apply(true);}
+
+/* ———— 搜索 ———— */
+const q=$('q');let qt;
+q.addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(()=>{state.q=q.value.trim();apply(true);},140);});
+q.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){q.value='';state.q='';apply(true);q.blur();}
+  if(ev.key==='Enter'){clearTimeout(qt);state.q=q.value.trim();apply(false);const v=visible();if(v.length===1)openEntry(v[0].n);else $('atlas').scrollIntoView({behavior:'smooth'});}
+});
+document.addEventListener('keydown',ev=>{
+  const tag=document.activeElement&&document.activeElement.tagName;
+  if(ev.key==='/'&&!/INPUT|TEXTAREA/.test(tag)&&!document.documentElement.classList.contains('open')){ev.preventDefault();q.focus();}
+});
+
+/* ———— 详情抽屉 ———— */
+let cur=0,lastFocus=null;
+function figHTML(e){
+  const notes=(e.notes||[]).map(t=>`<li>${t}</li>`).join('');
+  const bad=`<figure>${e.good?'<figcaption><b>原样</b></figcaption>':''}${e.bad}<ol class="notes">${notes}</ol></figure>`;
+  const good=e.good?`<figure><figcaption><b>改后</b> · 落账</figcaption>${e.good}${e.gnote?`<p class="gnote">${e.gnote}</p>`:''}</figure>`:'';
+  return `<div class="figs${e.good?' two':' one'}">${bad}${good}</div>`;
+}
+function renderEntry(e,dir){
+  const ts=terms();
+  $('dWhere').innerHTML=`<span class="num">${pad(e.n)}</span>${CAT[e.c].n}　${CAT[e.c].t}　·　${e.n} / 50`;
+  const b=$('dBody');
+  b.innerHTML=`<div class="dgrid"><div class="dtext"><h2 id="dTitle"><span class="num">No. ${pad(e.n)}</span>${hl(e.t,ts)}</h2>
+    <dl><dt>怎么认出来</dt><dd>${hl(e.see,ts)}</dd><dt>问题在哪</dt><dd class="why">${hl(e.why,ts)}</dd><dt>怎么改</dt><dd>${hl(e.fix,ts)}</dd></dl>
+    <label class="mine"><input type="checkbox" id="mine-${e.n}"${marked.has(e.n)?' checked':''}><span>我的网站也有这个</span></label></div>${figHTML(e)}</div>`;
+  b.scrollTop=0;
+  if(dir){b.classList.remove('swap');b.style.setProperty('--dir',dir>0?'28px':'-28px');void b.offsetWidth;b.classList.add('swap');}
+  $('mine-'+e.n).addEventListener('change',ev=>{ev.target.checked?marked.add(e.n):marked.delete(e.n);save();refreshMarks();});
+  const list=visible();const idx=list.findIndex(x=>x.n===e.n);
+  $('dPrev').disabled=!(idx>0||(idx<0&&e.n>1));$('dNext').disabled=!(idx>=0?idx<list.length-1:e.n<50);
+}
+function neighbor(step){const list=visible();let idx=list.findIndex(x=>x.n===cur);
+  if(idx<0){const n=cur+step;return n>=1&&n<=50?n:0;}const t=list[idx+step];return t?t.n:0;}
+function openEntry(n,fromHash){
+  const e=ORDER[n-1];if(!e)return;
+  const wasOpen=document.documentElement.classList.contains('open');
+  const dir=wasOpen&&cur?Math.sign(n-cur):0;cur=n;
+  renderEntry(e,dir);
+  if(!wasOpen){lastFocus=document.activeElement;document.documentElement.classList.add('open','lock');setTimeout(()=>$('drawer').focus({preventScroll:true}),50);}
+  if(!fromHash){try{history.replaceState(null,'','#n'+pad(n));}catch(err){}}
+}
+function closeEntry(){
+  if(!document.documentElement.classList.contains('open'))return;
+  document.documentElement.classList.remove('open');setTimeout(()=>document.documentElement.classList.remove('lock'),300);
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(err){}
+  const card=$('c'+cur);
+  if(lastFocus&&document.contains(lastFocus)&&lastFocus!==document.body)lastFocus.focus({preventScroll:true});
+  else if(card){const a=card.querySelector('a');a&&a.focus({preventScroll:true});}
+}
+$('dClose').onclick=closeEntry;$('scrim').onclick=closeEntry;
+$('dPrev').onclick=()=>{const n=neighbor(-1);if(n)openEntry(n);};
+$('dNext').onclick=()=>{const n=neighbor(1);if(n)openEntry(n);};
+document.addEventListener('keydown',ev=>{
+  if(!document.documentElement.classList.contains('open'))return;
+  if(ev.key==='Escape'){ev.preventDefault();closeEntry();}
+  else if(ev.key==='ArrowRight'&&!/INPUT/.test(document.activeElement.tagName)){const n=neighbor(1);if(n)openEntry(n);}
+  else if(ev.key==='ArrowLeft'&&!/INPUT/.test(document.activeElement.tagName)){const n=neighbor(-1);if(n)openEntry(n);}
+  else if(ev.key==='Tab'){const f=[...$('drawer').querySelectorAll('button:not(:disabled),input')];if(!f.length)return;const first=f[0],last=f[f.length-1];
+    if(ev.shiftKey&&(document.activeElement===first||document.activeElement===$('drawer'))){ev.preventDefault();last.focus();}else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}}
+});
+function fromHash(){const m=/^#n(\d{2})$/.exec(location.hash);if(m){const n=+m[1];if(n>=1&&n<=50)openEntry(n,true);}else if(location.hash&&location.hash!=='#'){closeEntry();}}
+window.addEventListener('hashchange',fromHash);
+
+/* ———— 自查清单 ———— */
+function reportText(){
+  if(!marked.size)return '';
+  const lines=[`网站自查：${marked.size} 条需要处理`,''];
+  CATS.forEach(c=>{const list=byCat[c.k].filter(e=>marked.has(e.n));if(!list.length)return;lines.push(`${c.n}、${c.t}`);list.forEach(e=>lines.push(`  ${pad(e.n)} ${e.t}\n     怎么改：${e.fix}`));lines.push('');});
+  lines.push('出自《AI 味设计图鉴》');return lines.join('\n');
+}
+function refreshMarks(){
+  const t=reportText(),r=$('report');
+  r.textContent=t||'还没有勾选任何条目。打开任意一条，在文字下方勾选“我的网站也有这个”。';
+  r.classList.toggle('none',!t);
+  $('copyBtn').disabled=!t;$('clearBtn').disabled=!t;
+  $('barCnt').textContent=marked.size?' '+marked.size:'';
+  ORDER.forEach(e=>{$('c'+e.n).querySelector('.mine-tag').textContent=marked.has(e.n)?'✓ 我的网站有':'';document.querySelector(`.pin[data-n="${e.n}"]`).classList.toggle('on',marked.has(e.n));});
+  if(state.mine)apply(false);
+}
+const status=$('status');
+$('copyBtn').addEventListener('click',()=>{
+  const t=reportText();
+  const fallback=()=>{const sel=window.getSelection(),rng=document.createRange();rng.selectNodeContents($('report'));sel.removeAllRanges();sel.addRange(rng);status.textContent='没能直接复制，文字已选中，请按 Ctrl+C（Mac 按 ⌘C）。';};
+  try{navigator.clipboard.writeText(t).then(()=>{status.textContent='已复制。';},fallback);}catch(err){fallback();}
+});
+let armed=false;
+$('clearBtn').addEventListener('click',ev=>{
+  if(!armed){armed=true;ev.target.textContent=`确定取消全部 ${marked.size} 条？`;setTimeout(()=>{armed=false;ev.target.textContent='全部取消勾选';},4000);return;}
+  armed=false;ev.target.textContent='全部取消勾选';marked.clear();save();refreshMarks();status.textContent='已全部取消。';
+});
+
+/* ———— 阅读进度 ———— */
+const prog=$('prog');let ticking=false;
+window.addEventListener('scroll',()=>{if(ticking)return;ticking=true;requestAnimationFrame(()=>{const h=document.documentElement;const p=h.scrollTop/Math.max(1,h.scrollHeight-h.clientHeight);prog.style.setProperty('--p',p.toFixed(4));ticking=false;});},{passive:true});
+
+apply(false);refreshMarks();moveInd();
+document.fonts&&document.fonts.ready.then(moveInd);
+fromHash();
+</script>
+
+</body>
+</html>
